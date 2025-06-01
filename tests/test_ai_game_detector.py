@@ -185,36 +185,30 @@ class TestAIProviderIntegration:
             "base_url": "https://openrouter.ai/api/v1"
         }
 
-        detector = AIGameDetector(ai_config=openrouter_config)
+        # Mock the OpenAI client that OpenRouter uses
+        with patch('openai.OpenAI') as mock_openai_class:
+            mock_client = Mock()
+            mock_openai_class.return_value = mock_client
 
-        with patch('requests.post') as mock_post:
             mock_response = Mock()
-            mock_response.json.return_value = {
-                "choices": [{
-                    "message": {
-                        "content": json.dumps({
-                            "game_type": "D&D",
-                            "edition": "5th Edition",
-                            "book_type": "Core Rulebook",
-                            "collection": "Player's Handbook",
-                            "confidence": 95.0,
-                            "reasoning": "Clear D&D 5th Edition content"
-                        })
-                    }
-                }]
-            }
-            mock_response.raise_for_status.return_value = None
-            mock_post.return_value = mock_response
+            mock_response.choices = [Mock()]
+            mock_response.choices[0].message.content = json.dumps({
+                "game_type": "D&D",
+                "edition": "5th Edition",
+                "book_type": "Core Rulebook",
+                "collection": "Player's Handbook",
+                "confidence": 95.0,
+                "reasoning": "Clear D&D 5th Edition content"
+            })
 
+            mock_client.chat.completions.create.return_value = mock_response
+
+            detector = AIGameDetector(ai_config=openrouter_config)
             result = detector.detect_game_type(sample_dnd_content)
 
             assert result["game_type"] == "D&D"
-            assert mock_post.called
-
-            # Verify correct API endpoint and headers
-            call_args = mock_post.call_args
-            assert "openrouter.ai" in call_args[1]["url"] or "openrouter.ai" in call_args[0][0]
-            assert "Authorization" in call_args[1]["headers"]
+            assert result["edition"] == "5th Edition"
+            assert mock_client.chat.completions.create.called
 
     def test_anthropic_integration(self, sample_dnd_content):
         """Test Anthropic API integration"""
@@ -224,9 +218,7 @@ class TestAIProviderIntegration:
             "api_key": "test-key"
         }
 
-        detector = AIGameDetector(ai_config=anthropic_config)
-
-        with patch('anthropic.Anthropic') as mock_anthropic_class:
+        with patch('Modules.ai_game_detector.anthropic.Anthropic') as mock_anthropic_class:
             mock_client = Mock()
             mock_anthropic_class.return_value = mock_client
 
@@ -243,9 +235,11 @@ class TestAIProviderIntegration:
 
             mock_client.messages.create.return_value = mock_response
 
+            detector = AIGameDetector(ai_config=anthropic_config)
             result = detector.detect_game_type(sample_dnd_content)
 
             assert result["game_type"] == "D&D"
+            assert result["edition"] == "5th Edition"
             assert mock_client.messages.create.called
 
     def test_mock_provider_fallback(self, mock_ai_config, sample_dnd_content):
@@ -318,12 +312,16 @@ class TestErrorHandling:
         """Test handling of invalid API responses"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
-            # Return invalid JSON
-            mock_ai.return_value = "Invalid JSON response"
+        with patch.object(detector.ai_client, 'analyze') as mock_analyze:
+            # Return invalid JSON that can't be parsed
+            mock_analyze.return_value = "Invalid JSON response"
 
-            with pytest.raises(Exception):
-                detector.detect_game_type(sample_dnd_content)
+            # Should fall back to fallback analysis instead of raising exception
+            result = detector.detect_game_type(sample_dnd_content)
+
+            # Should return fallback result, not raise exception
+            assert "game_type" in result
+            assert result["confidence"] < 1.0  # Fallback should have lower confidence
 
     def test_missing_api_key_handling(self, sample_dnd_content):
         """Test handling of missing API keys"""

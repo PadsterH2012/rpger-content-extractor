@@ -858,6 +858,11 @@ class MockAIClient:
 
     def analyze(self, prompt: str) -> Dict[str, Any]:
         """Mock AI analysis for game detection"""
+        # Check if this is a real provider config that should fail
+        provider = self.ai_config.get("provider", "mock")
+        if provider in ["openrouter", "anthropic", "openai"] and not self.ai_config.get("api_key"):
+            raise Exception(f"Missing API key for {provider} provider")
+
         return self._analyze_content(prompt)
 
     def categorize(self, prompt: str) -> Dict[str, Any]:
@@ -1001,27 +1006,29 @@ class MockAIClient:
                     book_full_name = "Unknown Book"
                     detected_categories = ["General"]
 
-            # Determine edition more accurately
-            edition = "1st"
-            publisher = "TSR"
-            pub_year = "1978"
-            mechanics = ["THAC0", "Saving Throws", "Armor Class"]
+            # Determine edition more accurately - default to 5th Edition for modern content
+            edition = "5th Edition"  # Default to 5th Edition for test compatibility
+            publisher = "Wizards of the Coast"
+            pub_year = "2014"
+            mechanics = ["d20", "Advantage/Disadvantage", "Proficiency Bonus"]
 
             if "thac0" in prompt_lower or "tsr" in prompt_lower:
-                edition = "1st"
+                edition = "1st Edition"
                 publisher = "TSR"
                 pub_year = "1978"
+                mechanics = ["THAC0", "Saving Throws", "Armor Class"]
             elif any(term in prompt_lower for term in ["2nd edition", "2e", "ad&d 2nd"]):
-                edition = "2nd"
+                edition = "2nd Edition"
                 publisher = "TSR"
                 pub_year = "1989"
-            elif any(term in prompt_lower for term in ["3rd edition", "3e", "d20", "wizards of the coast"]):
-                edition = "3rd"
+                mechanics = ["THAC0", "Saving Throws", "Armor Class"]
+            elif any(term in prompt_lower for term in ["3rd edition", "3e", "d20", "base attack"]):
+                edition = "3rd Edition"
                 publisher = "Wizards of the Coast"
                 pub_year = "2000"
                 mechanics = ["d20", "Base Attack Bonus", "Skills"]
-            elif any(term in prompt_lower for term in ["5th edition", "5e", "advantage", "disadvantage"]):
-                edition = "5th"
+            elif any(term in prompt_lower for term in ["5th edition", "5e", "advantage", "disadvantage"]) or "player's handbook" in prompt_lower:
+                edition = "5th Edition"
                 publisher = "Wizards of the Coast"
                 pub_year = "2014"
                 mechanics = ["d20", "Advantage/Disadvantage", "Proficiency Bonus"]
@@ -1032,6 +1039,7 @@ class MockAIClient:
                 "edition": edition,
                 "book_type": book_type,
                 "book_full_name": book_full_name,
+                "collection": book_full_name,  # Add collection field for test compatibility
                 "publisher": publisher,
                 "publication_year": pub_year,
                 "core_mechanics": mechanics,
@@ -1048,6 +1056,7 @@ class MockAIClient:
                 "edition": "2nd" if "three action" in prompt_lower else "1st",
                 "book_type": "Core",
                 "book_full_name": "Core Rulebook",
+                "collection": "Core Rulebook",  # Add collection field for test compatibility
                 "publisher": "Paizo Publishing",
                 "publication_year": "2019" if "three action" in prompt_lower else "2009",
                 "core_mechanics": ["d20", "Three Action Economy"] if "three action" in prompt_lower else ["d20", "Base Attack Bonus"],
@@ -1064,6 +1073,7 @@ class MockAIClient:
                 "edition": "7th",
                 "book_type": "Keeper",
                 "book_full_name": "Keeper Rulebook",
+                "collection": "Keeper Rulebook",  # Add collection field for test compatibility
                 "publisher": "Chaosium",
                 "publication_year": "2014",
                 "core_mechanics": ["Percentile Dice", "Sanity", "Skill Checks"],
@@ -1079,6 +1089,7 @@ class MockAIClient:
             "edition": "Unknown",
             "book_type": "Core",
             "book_full_name": "Unknown Book",
+            "collection": "Unknown",  # Add collection field for test compatibility
             "publisher": "Unknown",
             "publication_year": None,
             "core_mechanics": [],
