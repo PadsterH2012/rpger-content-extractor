@@ -23,6 +23,17 @@ pipeline {
         MONGODB_PORT = '27017'
         MONGODB_DB = 'rpger_test'
 
+        // AI Configuration - Secure credentials from Jenkins
+        OPENROUTER_API_KEY = credentials('openrouter-api-key')
+        ANTHROPIC_API_KEY = credentials('anthropic-api-key')
+
+        // AI Model Configuration for Testing
+        AI_PROVIDER = 'openrouter'
+        AI_MODEL = 'google/gemini-2.0-flash-exp'  // Gemini Flash 2 - cost-effective
+        AI_TEMPERATURE = '0.3'
+        AI_MAX_TOKENS = '4000'
+        AI_TIMEOUT = '60'
+
         // Test configuration
         PYTEST_ARGS = '--verbose --tb=short --cov=Modules --cov-report=term-missing --cov-report=xml:coverage.xml'
 
