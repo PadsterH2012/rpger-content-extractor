@@ -186,7 +186,7 @@ class TestAnalyzeEndpoint:
 
     def test_analyze_with_mock_provider(self, client, temp_pdf):
         """Test analysis with mock AI provider"""
-        with patch('Modules.ai_game_detector.AIGameDetector') as mock_detector_class:
+        with patch('ui.app.AIGameDetector') as mock_detector_class:
             mock_detector = Mock()
             mock_detector_class.return_value = mock_detector
 
@@ -220,6 +220,7 @@ class TestAnalyzeEndpoint:
                     mock_doc = Mock()
                     mock_doc.close = Mock()
                     mock_doc.__len__ = Mock(return_value=1)  # PDF has 1 page
+                    mock_doc.metadata = {}  # Mock metadata as empty dict
                     mock_fitz.return_value = mock_doc
 
                     # Mock PDF processor for ISBN extraction
@@ -307,7 +308,7 @@ class TestAnalyzeEndpoint:
 
     def test_analyze_with_confidence_testing(self, client, temp_pdf):
         """Test analysis with confidence testing enabled"""
-        with patch('Modules.ai_game_detector.AIGameDetector') as mock_detector_class:
+        with patch('ui.app.AIGameDetector') as mock_detector_class:
             mock_detector = Mock()
             mock_detector_class.return_value = mock_detector
 
@@ -330,63 +331,57 @@ class TestAnalyzeEndpoint:
             # Mock the set_session_tracking method
             mock_detector.set_session_tracking = Mock()
 
-            # Mock confidence tester (archive module import) - avoid sys.path mocking
+            # Mock confidence tester import - use direct module mocking
             with patch.dict('sys.modules', {'confidence_tester': Mock()}) as mock_modules:
-                with patch('builtins.__import__') as mock_import:
-                    # Mock the dynamic import of confidence_tester
-                    mock_confidence_module = Mock()
-                    mock_confidence_module.run_quick_test = Mock(return_value={
-                        'quick_confidence': 85.0,
-                        'recommended_method': 'text',
-                        'text_confidence': 85.0,
-                        'layout_confidence': 80.0,
-                        'issues': []
-                    })
+                # Mock the specific function that will be imported
+                mock_confidence_module = Mock()
+                mock_confidence_module.run_quick_test = Mock(return_value={
+                    'quick_confidence': 85.0,
+                    'recommended_method': 'text',
+                    'text_confidence': 85.0,
+                    'layout_confidence': 80.0,
+                    'issues': []
+                })
+                mock_modules['confidence_tester'] = mock_confidence_module
 
-                    def mock_import_side_effect(name, *args, **kwargs):
-                        if name == 'confidence_tester':
-                            return mock_confidence_module
-                        return __import__(name, *args, **kwargs)
+                # Mock token tracker
+                with patch('Modules.token_usage_tracker.get_tracker') as mock_tracker:
+                    mock_tracker_instance = Mock()
+                    mock_tracker.return_value = mock_tracker_instance
+                    mock_tracker_instance.start_session = Mock()
 
-                    mock_import.side_effect = mock_import_side_effect
+                    # Mock fitz and PDF processor for ISBN extraction
+                    with patch('fitz.open') as mock_fitz:
+                        mock_doc = Mock()
+                        mock_doc.close = Mock()
+                        mock_doc.metadata = {}  # Mock metadata as empty dict
+                        mock_fitz.return_value = mock_doc
 
-                    # Mock token tracker
-                    with patch('Modules.token_usage_tracker.get_tracker') as mock_tracker:
-                        mock_tracker_instance = Mock()
-                        mock_tracker.return_value = mock_tracker_instance
-                        mock_tracker_instance.start_session = Mock()
+                        with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
+                            mock_processor = Mock()
+                            mock_processor_class.return_value = mock_processor
+                            mock_processor._extract_isbn.return_value = {
+                                'isbn': '9780786965601',
+                                'source': 'pdf_metadata'
+                            }
 
-                        # Mock fitz and PDF processor for ISBN extraction
-                        with patch('fitz.open') as mock_fitz:
-                            mock_doc = Mock()
-                            mock_doc.close = Mock()
-                            mock_fitz.return_value = mock_doc
-
-                            with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
-                                mock_processor = Mock()
-                                mock_processor_class.return_value = mock_processor
-                                mock_processor._extract_isbn.return_value = {
-                                    'isbn': '9780786965601',
-                                    'source': 'pdf_metadata'
+                            # Mock the analysis_results global dict
+                            with patch('ui.app.analysis_results', {}) as mock_analysis_results:
+                                data = {
+                                    'filepath': temp_pdf,
+                                    'ai_provider': 'mock',
+                                    'run_confidence_test': True
                                 }
 
-                                # Mock the analysis_results global dict
-                                with patch('ui.app.analysis_results', {}) as mock_analysis_results:
-                                    data = {
-                                        'filepath': temp_pdf,
-                                        'ai_provider': 'mock',
-                                        'run_confidence_test': True
-                                    }
+                                response = client.post('/analyze',
+                                                     data=json.dumps(data),
+                                                     content_type='application/json')
 
-                                    response = client.post('/analyze',
-                                                         data=json.dumps(data),
-                                                         content_type='application/json')
+                                assert response.status_code == 200
+                                result = json.loads(response.data)
 
-                                    assert response.status_code == 200
-                                    result = json.loads(response.data)
-
-                                    assert result['success'] == True
-                                    assert 'confidence' in result
+                                assert result['success'] == True
+                                assert 'confidence' in result
 
 
 class TestExtractEndpoint:
