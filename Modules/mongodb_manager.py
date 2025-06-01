@@ -59,6 +59,7 @@ class MongoDBManager:
         self.debug = debug
         self.client = None
         self.database = None
+        self.db = None  # Alias for database (for test compatibility)
         self.connected = False
 
         if not PYMONGO_AVAILABLE:
@@ -87,6 +88,7 @@ class MongoDBManager:
 
             # Get database
             self.database = self.client[MONGODB_DATABASE]
+            self.db = self.database  # Set alias for test compatibility
             self.connected = True
 
             if self.debug:
@@ -617,11 +619,34 @@ class MongoDBManager:
                 'error': f'Collection deletion failed: {str(e)}'
             }
 
+    def insert_document(self, collection_name: str, document: Dict[str, Any]) -> Any:
+        """Insert a single document (for test compatibility)"""
+        if not self.connected:
+            raise Exception("Not connected to MongoDB")
+        collection = self.database[collection_name]
+        return collection.insert_one(document)
+
+    def generate_collection_name(self, metadata: Dict[str, Any]) -> str:
+        """Generate collection name from metadata (for test compatibility)"""
+        game_type = metadata.get('game_type', 'unknown').lower().replace(' ', '_')
+        edition = metadata.get('edition', '').lower().replace(' ', '_')
+        book_type = metadata.get('book_type', '').lower().replace(' ', '_')
+
+        parts = ['source_material', game_type]
+        if edition:
+            parts.append(edition)
+        if book_type:
+            parts.append(book_type)
+
+        return '.'.join(parts)
+
     def close(self):
         """Close MongoDB connection"""
         if self.client:
             self.client.close()
             self.connected = False
+            self.database = None
+            self.db = None
             if self.debug:
                 print("🔌 MongoDB connection closed")
 

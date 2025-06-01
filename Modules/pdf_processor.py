@@ -26,6 +26,7 @@ class MultiGamePDFProcessor:
         self.verbose = verbose
         self.debug = debug
         self.ai_config = ai_config or {"provider": "mock"}
+        self.aggressive_cleanup = False  # Add missing attribute for tests
         self.setup_logging()
 
         # Initialize AI components with full configuration

@@ -178,6 +178,16 @@ class AIGameDetector:
         except Exception as e:
             raise Exception(f"Failed to extract PDF content: {e}")
 
+    def detect_game_type(self, content: str) -> Dict[str, Any]:
+        """Detect game type from text content (for test compatibility)"""
+        # Create a mock content structure for analysis
+        mock_content = {
+            "text_sample": content[:2000],  # First 2000 chars
+            "metadata": {},
+            "page_count": 1
+        }
+        return self._perform_ai_analysis(mock_content)
+
     def analyze_game_metadata(self, pdf_path: Path) -> Dict[str, Any]:
         """Main method: AI-powered analysis of PDF to determine game metadata"""
 
@@ -200,6 +210,10 @@ class AIGameDetector:
             print(f"🎯 Confidence: {validated_result['confidence']:.2f}")
 
         return validated_result
+
+    def _call_ai_provider(self, prompt: str) -> Dict[str, Any]:
+        """Call AI provider with prompt (for test compatibility)"""
+        return self._perform_ai_analysis({"text_sample": prompt, "metadata": {}, "page_count": 1})
 
     def _perform_ai_analysis(self, content: Dict[str, Any]) -> Dict[str, Any]:
         """Send content to AI for analysis"""

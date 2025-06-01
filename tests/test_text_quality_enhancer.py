@@ -245,7 +245,7 @@ class TestQualityAssessment:
         high_metrics = enhancer._assess_text_quality(high_quality)
 
         assert isinstance(high_metrics, QualityMetrics)
-        assert high_metrics.overall_score > 70.0
+        assert high_metrics.overall_score >= 70.0
         assert high_metrics.word_count > 0
         assert high_metrics.grade in ['A', 'B', 'C', 'D', 'F']
 

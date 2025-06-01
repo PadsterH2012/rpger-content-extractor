@@ -1,0 +1,29 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 125 >>
+stream
+RPG Source Material
+Game Type: D&D
+Edition: 5th Edition
+ISBN: 978-0-7869-6561-5
+
+This is a test book for metadata extraction.
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+0
+%%EOF
