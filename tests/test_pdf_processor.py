@@ -166,7 +166,9 @@ class TestContentExtraction:
                     'edition': '5th Edition',
                     'book_type': 'Core Rulebook',
                     'collection': 'Test',
-                    'confidence': 95.0
+                    'collection_name': 'dnd_5th_test',
+                    'confidence': 95.0,
+                    'content_type': 'source_material'
                 }
 
                 result = processor.extract_pdf(Path("special_chars.pdf"))
@@ -435,6 +437,7 @@ class TestContentTypeDetection:
                 'edition': '5th Edition',
                 'book_type': 'Core Rulebook',
                 'collection': 'Player\'s Handbook',
+                'collection_name': 'dnd_5th_players_handbook',
                 'confidence': 95.0,
                 'content_type': 'source_material'
             }
@@ -470,6 +473,7 @@ class TestContentTypeDetection:
                 'edition': None,
                 'book_type': 'Fiction',
                 'collection': 'Fantasy Novel',
+                'collection_name': 'fantasy_novel',
                 'confidence': 85.0,
                 'content_type': 'novel'
             }
@@ -494,7 +498,9 @@ class TestContentTypeDetection:
                     'edition': None,
                     'book_type': 'Unknown',
                     'collection': 'Unknown',
-                    'confidence': 30.0
+                    'collection_name': 'unknown_content',
+                    'confidence': 30.0,
+                    'content_type': 'source_material'
                 }
 
                 # Force content type to novel

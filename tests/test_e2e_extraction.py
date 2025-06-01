@@ -185,7 +185,9 @@ class TestCompleteWorkflow:
                         'edition': system['expected']['edition'],
                         'book_type': 'Core Rulebook',
                         'collection': 'Test Book',
-                        'confidence': 90.0 if system['expected']['game_type'] != 'Unknown' else 30.0
+                        'collection_name': 'test_book_core',
+                        'confidence': 90.0 if system['expected']['game_type'] != 'Unknown' else 30.0,
+                        'content_type': 'source_material'
                     }
 
                     # Execute extraction
@@ -223,7 +225,11 @@ class TestCompleteWorkflow:
                     mock_detector.return_value = {
                         'game_type': 'D&D',
                         'edition': '5th Edition',
-                        'confidence': 90.0
+                        'book_type': 'Core Rulebook',
+                        'collection': 'Player\'s Handbook',
+                        'collection_name': 'dnd_5th_edition_core',
+                        'confidence': 90.0,
+                        'content_type': 'source_material'
                     }
 
                     # Execute with confidence testing
@@ -279,7 +285,11 @@ class TestErrorRecovery:
                 mock_detector.return_value = {
                     'game_type': 'D&D',
                     'edition': '5th Edition',
-                    'confidence': 95.0
+                    'book_type': 'Core Rulebook',
+                    'collection': 'Player\'s Handbook',
+                    'collection_name': 'dnd_5th_edition_core',
+                    'confidence': 95.0,
+                    'content_type': 'source_material'
                 }
 
                 # Should handle partial failures gracefully
@@ -304,7 +314,11 @@ class TestErrorRecovery:
                 mock_detector.return_value = {
                     'game_type': 'D&D',
                     'edition': '5th Edition',
-                    'confidence': 95.0
+                    'book_type': 'Core Rulebook',
+                    'collection': 'Player\'s Handbook',
+                    'collection_name': 'dnd_5th_edition_core',
+                    'confidence': 95.0,
+                    'content_type': 'source_material'
                 }
 
                 # Extraction should succeed even if database operations fail later
@@ -331,7 +345,11 @@ class TestErrorRecovery:
                 mock_detector.return_value = {
                     'game_type': 'D&D',
                     'edition': '5th Edition',
-                    'confidence': 95.0
+                    'book_type': 'Core Rulebook',
+                    'collection': 'Player\'s Handbook',
+                    'collection_name': 'dnd_5th_edition_core',
+                    'confidence': 95.0,
+                    'content_type': 'source_material'
                 }
 
                 # Should handle large files without memory issues
@@ -362,7 +380,11 @@ class TestSessionStatePersistence:
                 mock_detector.return_value = {
                     'game_type': 'D&D',
                     'edition': '5th Edition',
+                    'book_type': 'Core Rulebook',
+                    'collection': 'Player\'s Handbook',
+                    'collection_name': 'dnd_5th_edition_core',
                     'confidence': 95.0,
+                    'content_type': 'source_material',
                     'session_id': 'test_session_123'
                 }
 
