@@ -238,14 +238,10 @@ pipeline {
                             # Create test directories
                             mkdir -p test-reports htmlcov
 
-                            # Run unit tests (FOCUSED TESTING - SKIPPING VALIDATED MODULES)
-                            # ⚠️ TEMPORARY: Skipping text_quality_enhancer, mongodb_manager, ai_game_detector
-                            # Must re-enable when Phase 2 complete!
+                            # Run unit tests (FULL TEST SUITE - ALL MODULES ENABLED)
+                            # ✅ PHASE 2 COMPLETE: All test failures resolved, running full test suite!
                             pytest tests/ \
                                 ${PYTEST_ARGS} \
-                                --ignore=tests/test_text_quality_enhancer.py \
-                                --ignore=tests/test_mongodb_manager.py \
-                                --ignore=tests/test_ai_game_detector.py \
                                 --html=test-reports/unit-tests.html \
                                 --self-contained-html \
                                 --json-report --json-report-file=test-reports/unit-tests.json \
@@ -385,26 +381,19 @@ pipeline {
                             echo "🔍 Analyzing test results..."
                             . venv/bin/activate
 
-                            # Count tests from pytest markers (FOCUSED TESTING - EXCLUDING VALIDATED MODULES)
+                            # Count tests from pytest markers (FULL TEST SUITE - ALL MODULES)
                             UNIT_TESTS=$(pytest --collect-only -m "unit or not (integration or e2e or slow)" \
-                                --ignore=tests/test_text_quality_enhancer.py \
-                                --ignore=tests/test_mongodb_manager.py \
-                                --ignore=tests/test_ai_game_detector.py \
                                 tests/ 2>/dev/null | grep -c "<Function" || echo "0")
                             INTEGRATION_TESTS=$(pytest --collect-only -m "integration" tests/ 2>/dev/null | grep -c "<Function" || echo "0")
                             E2E_TESTS=$(pytest --collect-only -m "e2e" tests/ 2>/dev/null | grep -c "<Function" || echo "0")
 
-                            # Count skipped tests for tracking
-                            SKIPPED_TESTS=$(pytest --collect-only tests/test_text_quality_enhancer.py tests/test_mongodb_manager.py tests/test_ai_game_detector.py 2>/dev/null | grep -c "<Function" || echo "0")
-
-                            echo "📊 Test Results Summary (FOCUSED TESTING):"
-                            echo "   - Unit Tests: $UNIT_TESTS (focused on remaining issues)"
+                            echo "📊 Test Results Summary (FULL TEST SUITE):"
+                            echo "   - Unit Tests: $UNIT_TESTS (all modules enabled)"
                             echo "   - Integration Tests: $INTEGRATION_TESTS"
                             echo "   - E2E Tests: $E2E_TESTS"
-                            echo "   - Skipped Tests: $SKIPPED_TESTS (validated modules temporarily excluded)"
                             echo ""
-                            echo "⚠️  REMINDER: Must re-enable all tests when Phase 2 complete!"
-                            echo "   Skipped: text_quality_enhancer, mongodb_manager, ai_game_detector"
+                            echo "✅ PHASE 2 COMPLETE: All test failures resolved!"
+                            echo "   Running complete test suite: text_quality_enhancer, mongodb_manager, ai_game_detector, pdf_processor, web_ui"
 
                             TOTAL_TESTS=$((UNIT_TESTS + INTEGRATION_TESTS + E2E_TESTS))
                             echo "   - Total: $TOTAL_TESTS"
