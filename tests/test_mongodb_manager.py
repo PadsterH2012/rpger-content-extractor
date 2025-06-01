@@ -337,19 +337,8 @@ class TestDocumentOperations:
             assert len(results) == 1
             assert "title" in results[0]
 
-    @pytest.mark.skip(reason="update_document method not implemented in actual MongoDBManager")
-    def test_update_document(self, mock_mongodb_config):
-        """Test updating a document"""
-        # Note: This test is skipped because the actual MongoDBManager doesn't have update_document method
-        # The actual interface uses import_extracted_content and other specialized methods
-        pass
-
-    @pytest.mark.skip(reason="delete_document method not implemented in actual MongoDBManager")
-    def test_delete_document(self, mock_mongodb_config):
-        """Test deleting a document"""
-        # Note: This test is skipped because the actual MongoDBManager doesn't have delete_document method
-        # The actual interface uses import_extracted_content and other specialized methods
-        pass
+    # Note: update_document and delete_document methods are not implemented by design
+    # The MongoDBManager uses specialized methods like import_extracted_content instead of generic CRUD operations
 
 
 @pytest.mark.unit
@@ -357,19 +346,8 @@ class TestDocumentOperations:
 class TestIndexManagement:
     """Test index creation and management"""
 
-    @pytest.mark.skip(reason="create_index method not implemented in actual MongoDBManager")
-    def test_create_index(self, mock_mongodb_config):
-        """Test creating an index on a collection"""
-        # Note: This test is skipped because the actual MongoDBManager doesn't have create_index method
-        # The actual interface focuses on content import and querying
-        pass
-
-    @pytest.mark.skip(reason="list_indexes method not implemented in actual MongoDBManager")
-    def test_list_indexes(self, mock_mongodb_config):
-        """Test listing indexes on a collection"""
-        # Note: This test is skipped because the actual MongoDBManager doesn't have list_indexes method
-        # The actual interface focuses on content import and querying
-        pass
+    # Note: create_index and list_indexes methods are not implemented by design
+    # The MongoDBManager focuses on content import and querying rather than low-level index management
 
 
 @pytest.mark.unit
