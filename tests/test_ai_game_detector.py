@@ -61,7 +61,7 @@ class TestGameTypeDetection:
         """Test detection of Pathfinder 2nd Edition content"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.return_value = {
                 "game_type": "Pathfinder",
                 "edition": "2nd Edition",
@@ -86,7 +86,7 @@ class TestGameTypeDetection:
         tabletop RPG system. It might be a novel or technical manual.
         """
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.return_value = {
                 "game_type": "Unknown",
                 "edition": None,
@@ -113,7 +113,7 @@ class TestGameTypeDetection:
         satisfy his need for a quiet place to write.
         """
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.return_value = {
                 "game_type": "Novel",
                 "edition": None,
@@ -149,7 +149,7 @@ class TestGameTypeDetection:
         Characters have abilities and skills.
         """
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             # High confidence response
             mock_ai.return_value = {
                 "game_type": "D&D",
@@ -280,7 +280,7 @@ class TestAIProviderIntegration:
         detector.ai_config = anthropic_config
 
         # Should adapt to new provider
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.return_value = {
                 "game_type": "D&D",
                 "edition": "5th Edition",
@@ -298,7 +298,7 @@ class TestErrorHandling:
         """Test handling of API timeouts"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.side_effect = TimeoutError("API request timed out")
 
             with pytest.raises(Exception):
@@ -308,7 +308,7 @@ class TestErrorHandling:
         """Test handling of API rate limits"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.side_effect = Exception("Rate limit exceeded")
 
             with pytest.raises(Exception):
@@ -318,7 +318,7 @@ class TestErrorHandling:
         """Test handling of invalid API responses"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             # Return invalid JSON
             mock_ai.return_value = "Invalid JSON response"
 
@@ -343,7 +343,7 @@ class TestErrorHandling:
         """Test handling of network connectivity issues"""
         detector = AIGameDetector(ai_config=mock_ai_config)
 
-        with patch.object(detector, '_call_ai_provider') as mock_ai:
+        with patch.object(detector, '_perform_ai_analysis') as mock_ai:
             mock_ai.side_effect = ConnectionError("Network unreachable")
 
             with pytest.raises(Exception):
@@ -364,7 +364,7 @@ class TestContentAnalysis:
         )
 
         with patch('fitz.open', return_value=mock_pdf):
-            with patch.object(detector, '_call_ai_provider') as mock_ai:
+            with patch.object(detector, '_perform_ai_analysis') as mock_ai:
                 mock_ai.return_value = {
                     "game_type": "D&D",
                     "edition": "5th Edition",
@@ -396,7 +396,7 @@ class TestContentAnalysis:
         mock_pdf = MockPDFDocument(pages_text=large_content, page_count=100)
 
         with patch('fitz.open', return_value=mock_pdf):
-            with patch.object(detector, '_call_ai_provider') as mock_ai:
+            with patch.object(detector, '_perform_ai_analysis') as mock_ai:
                 mock_ai.return_value = {
                     "game_type": "D&D",
                     "edition": "5th Edition",
@@ -421,7 +421,7 @@ class TestContentAnalysis:
         ]
 
         for confidence, expected_level in test_cases:
-            with patch.object(detector, '_call_ai_provider') as mock_ai:
+            with patch.object(detector, '_perform_ai_analysis') as mock_ai:
                 mock_ai.return_value = {
                     "game_type": "D&D" if confidence > 50 else "Unknown",
                     "edition": "5th Edition" if confidence > 70 else None,
