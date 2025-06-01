@@ -1,0 +1,129 @@
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+venv.bak/
+
+# Git
+.git/
+.gitignore
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Documentation build
+docs/_build/
+site/
+
+# Backup files
+*.bak
+*.backup
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local configuration files
+config.local.*
+settings.local.*
+
+# API keys and secrets
+secrets/
+keys/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Upload directories (if temporary)
+uploads/
+temp_uploads/
+
+# Development and testing artifacts
+archivebin/
+JENKINS_BUILD_FIXES.md
+
+# Database files (exclude from Docker image)
+*.db
+*.sqlite
+*.sqlite3
+
+# ChromaDB data (exclude from Docker image)
+chroma_db/
+extracted/
+
+# PDF test files (exclude large test files)
+# *.pdf

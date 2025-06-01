@@ -36,9 +36,28 @@ class TestInfrastructure:
         try:
             from Modules.pdf_processor import MultiGamePDFProcessor
             from Modules.ai_game_detector import AIGameDetector
-            from Modules.mongodb_manager import MongoDBManager
+
+            # Test MongoDB manager import with mock environment to prevent connection
+            import os
+            original_host = os.environ.get('MONGODB_HOST')
+            os.environ['MONGODB_HOST'] = 'localhost'  # Use localhost to prevent hanging
+
+            try:
+                from Modules.mongodb_manager import MongoDBManager
+                # Test that the class can be instantiated without connecting
+                manager = MongoDBManager(debug=False)
+                assert manager is not None
+            finally:
+                # Restore original environment
+                if original_host:
+                    os.environ['MONGODB_HOST'] = original_host
+                elif 'MONGODB_HOST' in os.environ:
+                    del os.environ['MONGODB_HOST']
+
         except ImportError as e:
             pytest.fail(f"Failed to import required modules: {e}")
+        except Exception as e:
+            pytest.fail(f"Error during module import test: {e}")
     
     def test_pytest_markers(self):
         """Test that pytest markers are working"""
