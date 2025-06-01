@@ -5,6 +5,9 @@
 .env.test
 .env.production
 
+# Archivebin
+archivebin/
+
 # Virtual environments
 venv/
 env/
