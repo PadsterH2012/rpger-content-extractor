@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Extraction v3 - Web UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-robot"></i> AI-Powered Extraction v3
+                <small class="version-badge ms-2">v{{ version_info.version }}</small>
+            </span>
+            <div class="d-flex">
+                <button class="btn btn-outline-light btn-sm me-2" onclick="openSettings()">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="checkStatus()">
+                    <i class="fas fa-heartbeat"></i> Status
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-md-8">
+                <!-- Step 1: Upload PDF -->
+                <div class="card mb-4" id="upload-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-upload"></i> Step 1: Upload PDF
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="upload-area">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Drag and drop your PDF file here, or click to browse</p>
+                            <input type="file" id="file-input" accept=".pdf" style="display: none;">
+                            <button class="btn btn-primary" id="browse-btn" type="button">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                        <div id="file-info" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <strong>File Selected:</strong> <span id="filename"></span><br>
+                                <strong>Size:</strong> <span id="filesize"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: AI Analysis -->
+                <div class="card mb-4" id="analysis-card" style="display: none;">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-brain"></i> Step 2: AI Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-6">
+                                <label for="content-type" class="form-label fw-semibold">Content Type</label>
+                                <select class="form-select" id="content-type">
+                                    <option value="source_material">Source Material</option>
+                                    <option value="novel">Novel</option>
+                                </select>
+                                <small class="text-muted">Select content type for optimal extraction</small>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-success w-100 btn-lg" id="analyze-btn" onclick="analyzePDF()">
+                                    <i class="fas fa-search me-2"></i> Analyze PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden inputs to maintain compatibility -->
+                        <input type="hidden" id="ai-provider" value="mock">
+                        <input type="hidden" id="ai-model" value="">
+                        <div id="model-selection-container" style="display: none;"></div>
+                        <div id="analysis-progress" style="display: none;">
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar" style="width: 100%"></div>
+                            </div>
+                            <p class="text-muted">AI is analyzing your PDF content...</p>
+                        </div>
+                        <div id="analysis-results" style="display: none;">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-check-circle"></i> Analysis Complete</h6>
+                                <div id="analysis-details"></div>
+                                <div class="mt-3">
+                                    <button class="btn btn-outline-secondary btn-sm" id="copy-text-btn" onclick="copyExtractedText()">
+                                        <i class="fas fa-copy"></i> Copy Extracted Text
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Content Extraction -->
+                <div class="card mb-4" id="extraction-card" style="display: none;">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs"></i> Step 3: Content Extraction
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Extract and categorize content from the analyzed PDF.</p>
+
+
+
+                        <button class="btn btn-warning" id="extract-btn" onclick="extractContent()">
+                            <i class="fas fa-play"></i> Extract Content
+                        </button>
+                        <div id="extraction-progress" style="display: none;">
+                            <div class="progress mb-3 mt-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                     role="progressbar" style="width: 100%"></div>
+                            </div>
+                            <p class="text-muted">Extracting and categorizing content...</p>
+                        </div>
+                        <div id="extraction-results" style="display: none;">
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-check-circle"></i> Extraction Complete</h6>
+                                <div id="extraction-details"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Database Import -->
+                <div class="card mb-4" id="import-card" style="display: none;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-database"></i> Step 4: Database Import
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Import extracted content to your preferred database.</p>
+
+                        <!-- Metadata Review Section -->
+                        <div class="alert alert-info" id="metadata-review" style="display: none;">
+                            <h6><i class="fas fa-edit"></i> Review & Edit Metadata</h6>
+                            <p class="small mb-3">Review the AI-detected metadata below. Click "Edit" to make changes before importing.</p>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Content Type:</strong></label>
+                                        <div class="metadata-display" id="display-content-type"></div>
+                                        <select class="form-select form-select-sm metadata-edit" id="edit-content-type" style="display: none;">
+                                            <option value="source_material">Source Material</option>
+                                            <option value="novel">Novel</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Game Type:</strong></label>
+                                        <div class="metadata-display" id="display-game-type"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-game-type" style="display: none;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Edition:</strong></label>
+                                        <div class="metadata-display" id="display-edition"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-edition" style="display: none;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Book Type:</strong></label>
+                                        <div class="metadata-display" id="display-book-type"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-book-type" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Book Title:</strong></label>
+                                        <div class="metadata-display" id="display-book-title"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-book-title" style="display: none;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Collection Name:</strong></label>
+                                        <div class="metadata-display" id="display-collection"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-collection" style="display: none;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>ISBN:</strong></label>
+                                        <div class="metadata-display" id="display-isbn"></div>
+                                        <input type="text" class="form-control form-control-sm metadata-edit" id="edit-isbn" style="display: none;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Organization Style:</strong></label>
+                                        <select class="form-select form-select-sm" id="organization-style" onchange="updatePathPreview()">
+                                            <option value="separate">Separate Collections (Recommended)</option>
+                                            <option value="single">Single Collection with Folders</option>
+                                        </select>
+                                        <small class="text-muted">Choose how to organize content in MongoDB</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Generated Path:</strong></label>
+                                        <div class="text-muted small" id="generated-path">
+                                            <span id="path-type">Collection:</span> rpger.<span id="path-preview">...</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small"><strong>Extraction Confidence:</strong></label>
+                                        <div class="metadata-display" id="display-extraction-confidence">
+                                            <span id="extraction-confidence-value">Testing...</span>
+                                            <span class="badge ms-2" id="extraction-confidence-grade">-</span>
+                                        </div>
+                                        <div class="small text-muted mt-1" id="confidence-details" style="display: none;">
+                                            <div>Text: <span id="text-confidence">-</span>% | Layout: <span id="layout-confidence">-</span>% | Method: <span id="recommended-method">-</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-outline-primary btn-sm me-2" id="edit-metadata-btn" onclick="toggleMetadataEdit()">
+                                    <i class="fas fa-edit"></i> Edit Metadata
+                                </button>
+                                <button class="btn btn-success btn-sm me-2" id="save-metadata-btn" onclick="saveMetadataChanges()" style="display: none;">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button class="btn btn-secondary btn-sm" id="cancel-metadata-btn" onclick="cancelMetadataEdit()" style="display: none;">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-info w-100 mb-2" onclick="importToChroma()">
+                                    <i class="fas fa-vector-square"></i> Import to ChromaDB
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary w-100 mb-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-leaf"></i> Import to MongoDB
+                                    </button>
+                                    <ul class="dropdown-menu w-100">
+                                        <li><a class="dropdown-item" href="#" onclick="importToMongoDB(false)">
+                                            <i class="fas fa-file"></i> Single Document (v3 style)
+                                            <br><small class="text-muted">All sections in one document</small>
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="importToMongoDB(true)">
+                                            <i class="fas fa-files"></i> Split Sections (v1/v2 style)
+                                            <br><small class="text-muted">Each section as separate document</small>
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <button class="btn btn-outline-primary w-100" onclick="downloadResults()">
+                                    <i class="fas fa-download"></i> Download Results (JSON)
+                                </button>
+                            </div>
+                        </div>
+                        <div id="import-results" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- System Status -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-server"></i> System Status
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- AI Provider Configuration -->
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-12">
+                                    <label for="main-ai-provider" class="form-label small"><strong>AI Provider</strong></label>
+                                    <select class="form-select form-select-sm" id="main-ai-provider" onchange="onMainProviderChange()">
+                                        <option value="mock">Mock AI (Immediate)</option>
+                                        <option value="claude">Claude AI (Recommended)</option>
+                                        <option value="openai">OpenAI GPT-4</option>
+                                        <option value="openrouter">OpenRouter (300+ Models)</option>
+                                        <option value="local">Local LLM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2" id="main-model-selection-container" style="display: none;">
+                                <div class="col-12">
+                                    <label for="main-ai-model" class="form-label small">
+                                        <strong>Model</strong>
+                                        <button class="btn btn-link btn-sm p-0 ms-1" onclick="refreshMainModels()" title="Refresh model list">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </label>
+                                    <select class="form-select form-select-sm" id="main-ai-model">
+                                        <option value="">Loading models...</option>
+                                    </select>
+                                    <small class="text-muted" id="main-model-description">Select a model for analysis</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Status -->
+                        <div id="status-content">
+                            <p class="text-muted">Click "Status" to check system health</p>
+                        </div>
+
+                        <!-- Database Browse Buttons -->
+                        <div class="mt-3">
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="browseChromaDB()">
+                                <i class="fas fa-database"></i> Browse ChromaDB
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="browseMongoDB()">
+                                <i class="fas fa-leaf"></i> Browse MongoDB
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tasks"></i> Progress
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Source Material Progress -->
+                        <div id="source-progress" class="progress-track">
+                            <div class="progress-step" id="step-upload">
+                                <i class="fas fa-circle text-muted"></i> Upload PDF
+                            </div>
+                            <div class="progress-step" id="step-analyze">
+                                <i class="fas fa-circle text-muted"></i> AI Analysis
+                            </div>
+                            <div class="progress-step" id="step-extract">
+                                <i class="fas fa-circle text-muted"></i> Content Extraction
+                            </div>
+                            <div class="progress-step" id="step-import">
+                                <i class="fas fa-circle text-muted"></i> Database Import
+                            </div>
+                        </div>
+
+                        <!-- Novel Progress -->
+                        <div id="novel-progress" class="progress-track" style="display: none;">
+                            <div class="progress-step" id="novel-step-upload">
+                                <i class="fas fa-circle text-muted"></i> Upload Novel
+                            </div>
+                            <div class="progress-step" id="novel-step-analyze">
+                                <i class="fas fa-circle text-muted"></i> Text Analysis
+                            </div>
+                            <div class="progress-step" id="novel-step-discovery" data-toggle="collapse" data-target="#discovery-details">
+                                <i class="fas fa-circle text-muted"></i> Character Discovery
+                                <div class="collapse" id="discovery-details">
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Chunks: <span id="chunks-processed">0</span>/<span id="total-chunks">0</span></small>
+                                    </div>
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Candidates: <span id="candidates-found">0</span></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-step" id="novel-step-filtering" data-toggle="collapse" data-target="#filtering-details">
+                                <i class="fas fa-circle text-muted"></i> Filtering Candidates
+                                <div class="collapse" id="filtering-details">
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Filtered: <span id="candidates-filtered">0</span></small>
+                                    </div>
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Filter ratio: <span id="filter-ratio">0%</span></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-step" id="novel-step-analysis" data-toggle="collapse" data-target="#analysis-details">
+                                <i class="fas fa-circle text-muted"></i> Character Analysis
+                                <div class="collapse" id="analysis-details">
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Analyzing: <span id="current-character">-</span></small>
+                                    </div>
+                                    <div class="progress-substep">
+                                        <small class="text-muted">Confirmed: <span id="characters-confirmed">0</span></small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-step" id="novel-step-complete">
+                                <i class="fas fa-circle text-muted"></i> Complete
+                            </div>
+                        </div>
+
+                        <!-- Token Usage Tracker -->
+                        <div class="mt-3 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-dollar-sign"></i> Session Cost
+                                </small>
+                                <small class="text-muted">
+                                    <span id="session-cost">$0.00</span>
+                                    <button class="btn btn-link btn-sm p-0 ms-1" onclick="recalculateSessionCost()" title="Recalculate cost">
+                                        <i class="fas fa-sync-alt" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-coins"></i> Session Tokens
+                                </small>
+                                <small class="text-muted">
+                                    <span id="session-tokens">0</span> tokens
+                                </small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-phone"></i> API Calls
+                                </small>
+                                <small class="text-muted">
+                                    <span id="session-api-calls">0</span> calls
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help & Tips -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb"></i> Tips
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success"></i> Use Claude AI for best accuracy</li>
+                            <li><i class="fas fa-check text-success"></i> Mock AI works without API keys</li>
+                            <li><i class="fas fa-check text-success"></i> ChromaDB enables vector search</li>
+                            <li><i class="fas fa-check text-success"></i> Download results for backup</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cog"></i> System Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- AI Configuration -->
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-brain"></i> AI Configuration</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Anthropic API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="anthropic-api-key" placeholder="sk-ant-...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('anthropic-api-key')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">For Claude AI provider</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">OpenAI API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="openai-api-key" placeholder="sk-...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('openai-api-key')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">For OpenAI GPT-4 provider</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">OpenRouter API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="openrouter-api-key" placeholder="sk-or-...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('openrouter-api-key')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">For OpenRouter (300+ models from multiple providers)</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Local LLM URL</label>
+                                <input type="text" class="form-control" id="local-llm-url" placeholder="http://localhost:11434">
+                                <small class="text-muted">For Ollama or other local LLM</small>
+                            </div>
+                        </div>
+
+                        <!-- Database Configuration -->
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-database"></i> Database Configuration</h6>
+                            <div class="mb-3">
+                                <label class="form-label">ChromaDB Host</label>
+                                <input type="text" class="form-control" id="chromadb-host" placeholder="10.202.28.49">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ChromaDB Port</label>
+                                <input type="number" class="form-control" id="chromadb-port" placeholder="8000">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">MongoDB Host</label>
+                                <input type="text" class="form-control" id="mongodb-host" placeholder="10.202.28.46">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">MongoDB Port</label>
+                                <input type="number" class="form-control" id="mongodb-port" placeholder="27017">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">MongoDB Database</label>
+                                <input type="text" class="form-control" id="mongodb-database" placeholder="rpger">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6><i class="fas fa-sliders-h"></i> Advanced Settings</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">AI Temperature</label>
+                                        <input type="range" class="form-range" id="ai-temperature" min="0" max="1" step="0.1" value="0.3">
+                                        <small class="text-muted">Creativity level: <span id="temperature-value">0.3</span></small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Max Tokens</label>
+                                        <input type="number" class="form-control" id="ai-max-tokens" placeholder="4000">
+                                        <small class="text-muted">Maximum response length</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Request Timeout (seconds)</label>
+                                        <input type="number" class="form-control" id="ai-timeout" placeholder="60">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Max Retries</label>
+                                        <input type="number" class="form-control" id="ai-retries" placeholder="3">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Settings are saved to .env file. If .env doesn't exist, it will be created from .env.sample.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Browser Modal -->
+    <div class="modal fade" id="databaseModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="databaseModalTitle">
+                        <i class="fas fa-database"></i> Database Browser
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="database-browser-content">
+                        <!-- Database browser content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collection Deletion Modal -->
+    <div class="modal fade" id="deleteCollectionModal" tabindex="-1" aria-labelledby="deleteCollectionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteCollectionModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Delete Collection
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="deletion-step-1" class="deletion-step">
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-warning me-2"></i>Warning: This action cannot be undone!</h6>
+                            <p class="mb-0">You are about to permanently delete a MongoDB collection. This will remove all documents and cannot be reversed.</p>
+                        </div>
+
+                        <div class="collection-info mb-3">
+                            <h6>Collection Information:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Name:</strong> <span id="delete-collection-name"></span><br>
+                                    <strong>Documents:</strong> <span id="delete-document-count"></span><br>
+                                    <strong>Size:</strong> <span id="delete-collection-size"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Storage Size:</strong> <span id="delete-storage-size"></span><br>
+                                    <strong>Indexes:</strong> <span id="delete-index-count"></span><br>
+                                    <strong>Backup Size:</strong> <span id="delete-backup-size"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="safety-warnings" class="mb-3"></div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="createBackupCheck" checked>
+                            <label class="form-check-label" for="createBackupCheck">
+                                <strong>Create backup before deletion</strong> (Recommended)
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                A JSON backup will be created in the backups/collections directory
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="proceedToConfirmation">
+                                Proceed to Confirmation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="deletion-step-2" class="deletion-step" style="display: none;">
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-skull-crossbones me-2"></i>Final Confirmation Required</h6>
+                            <p class="mb-0">This is your last chance to cancel. The collection will be permanently deleted.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmationInput" class="form-label">
+                                <strong>Type the collection name to confirm deletion:</strong>
+                            </label>
+                            <input type="text" class="form-control" id="confirmationInput"
+                                   placeholder="Enter collection name exactly as shown">
+                            <small class="form-text text-muted">
+                                Collection name: <code id="confirmation-collection-name"></code>
+                            </small>
+                        </div>
+
+                        <div class="mb-3" id="admin-password-section" style="display: none;">
+                            <label for="adminPasswordInput" class="form-label">
+                                <strong>Admin Password:</strong>
+                            </label>
+                            <input type="password" class="form-control" id="adminPasswordInput"
+                                   placeholder="Enter admin password">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" id="backToStep1">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <button type="button" class="btn btn-danger" id="confirmDeletion" disabled>
+                                <i class="fas fa-trash me-2"></i>Delete Collection
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="deletion-step-3" class="deletion-step" style="display: none;">
+                        <div class="text-center">
+                            <div class="spinner-border text-danger mb-3" role="status">
+                                <span class="visually-hidden">Deleting...</span>
+                            </div>
+                            <h6>Deleting Collection...</h6>
+                            <p class="text-muted">Please wait while the collection is being deleted.</p>
+                            <div id="deletion-progress">
+                                <div class="progress mb-2">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger"
+                                         role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted" id="deletion-status">Preparing deletion...</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="deletion-step-4" class="deletion-step" style="display: none;">
+                        <div class="text-center">
+                            <div id="deletion-result"></div>
+                            <button type="button" class="btn btn-primary mt-3" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Extraction v3</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-body">
+                <!-- Toast message will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Footer with version information -->
+    <footer class="app-footer bg-light py-2 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">&copy; 2024 AI-Powered Extraction v3</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        v{{ version_info.version }} ({{ version_info.environment }})
+                        <span title="Build Date: {{ version_info.build_date }}">
+                            <i class="fas fa-calendar-alt ms-2"></i>
+                        </span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    depends_on:
+      - mongodb
+      - chromadb
+    environment:
+      - SETUP_MODE=containers
+      - DEPLOYMENT_TYPE=docker-compose
+      - MONGODB_URL=mongodb://mongodb:27017
+      - CHROMADB_URL=http://chromadb:8000
+      - MONGODB_DATABASE=rpger
+      - CHROMA_TENANT=default_tenant
+      - CHROMA_DATABASE=default_database
+    networks:
+      - rpger-network
+
+  mongodb:
+    image: mongo:7-jammy
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=rpger
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - rpger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    volumes:
+      - chromadb_data:/chroma/data
+    networks:
+      - rpger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+  chromadb_data:

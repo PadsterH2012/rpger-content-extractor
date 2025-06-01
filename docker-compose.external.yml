@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - SETUP_MODE=external
+      - DEPLOYMENT_TYPE=external-dbs
+      - MONGODB_URL=${EXTERNAL_MONGODB_URL}
+      - CHROMADB_URL=${EXTERNAL_CHROMADB_URL}
+      - MONGODB_DATABASE=${EXTERNAL_MONGODB_DATABASE:-rpger}
+      - CHROMA_TENANT=${EXTERNAL_CHROMA_TENANT:-default_tenant}
+      - CHROMA_DATABASE=${EXTERNAL_CHROMA_DATABASE:-default_database}
+    networks:
+      - rpger-network
