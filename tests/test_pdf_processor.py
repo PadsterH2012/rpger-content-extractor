@@ -158,9 +158,13 @@ class TestContentExtraction:
             assert result is not None
             # Should handle low-text content gracefully
 
-    def test_special_character_handling(self, mock_ai_config):
+    def test_special_character_handling(self, mock_ai_config, temp_dir):
         """Test handling of Unicode and special characters"""
         processor = MultiGamePDFProcessor(ai_config=mock_ai_config)
+
+        # Create a temporary file for testing
+        test_pdf = temp_dir / "special_chars.pdf"
+        test_pdf.write_text("Mock PDF content")
 
         special_text = "Café Münchën — \"Smart quotes\" and em-dashes… ©2024 ™"
         mock_doc = MockPDFDocument(pages_text=[special_text])
@@ -177,7 +181,7 @@ class TestContentExtraction:
                     'content_type': 'source_material'
                 }
 
-                result = processor.extract_pdf(Path("special_chars.pdf"))
+                result = processor.extract_pdf(test_pdf)
 
                 assert result is not None
                 # Verify special characters are preserved
@@ -413,6 +417,7 @@ class TestMetadataExtraction:
             'edition': '5th Edition',
             'book_type': 'Core Rulebook',
             'collection': 'Player\'s Handbook',
+            'collection_name': 'dnd_5th_players_handbook',
             'confidence': 95.0
         }
         isbn_data = {
@@ -552,7 +557,8 @@ class TestErrorHandling:
                     'book_type': 'Unknown',
                     'collection': 'Unknown',
                     'collection_name': 'unknown_content',
-                    'confidence': 0.0
+                    'confidence': 0.0,
+                    'content_type': 'source_material'
                 }
 
                 result = processor.extract_pdf(empty_pdf)
@@ -662,7 +668,7 @@ class TestBatchProcessing:
         pdf1.write_text("Good PDF content")
         pdf2.write_text("Bad PDF content")
 
-        def mock_extract_side_effect(path):
+        def mock_extract_side_effect(path, force_game_type=None, force_edition=None):
             if "bad" in str(path):
                 raise Exception("Processing failed")
             return {"metadata": {"file_name": str(path)}, "sections": []}
