@@ -43,7 +43,14 @@ class TestGameTypeDetection:
             with patch('fitz.open') as mock_fitz:
                 mock_doc = MockPDFDocument(pages_text=[sample_dnd_content])
                 mock_fitz.return_value = mock_doc
-                result = detector.analyze_game_metadata(Path("test.pdf"))
+                # Create a temporary test file for the test
+                test_file = Path("test.pdf")
+                test_file.write_text("Mock PDF content")
+                try:
+                    result = detector.analyze_game_metadata(test_file)
+                finally:
+                    if test_file.exists():
+                        test_file.unlink()
 
             assert result["game_type"] == "D&D"
             assert result["edition"] == "5th Edition"
@@ -367,7 +374,14 @@ class TestContentAnalysis:
                     "reasoning": "Clear D&D 5th Edition content"
                 }
 
-                result = detector.analyze_game_metadata(Path("test.pdf"))
+                # Create a temporary test file for the test
+                test_file = Path("test.pdf")
+                test_file.write_text("Mock PDF content")
+                try:
+                    result = detector.analyze_game_metadata(test_file)
+                finally:
+                    if test_file.exists():
+                        test_file.unlink()
 
                 assert result["game_type"] == "D&D"
                 assert result["edition"] == "5th Edition"
@@ -378,7 +392,7 @@ class TestContentAnalysis:
         detector = AIGameDetector(ai_config=mock_ai_config)
 
         # Create a large document
-        large_content = ["Page " + str(i) + " content"] * 100
+        large_content = ["Page " + str(page_num) + " content" for page_num in range(100)]
         mock_pdf = MockPDFDocument(pages_text=large_content, page_count=100)
 
         with patch('fitz.open', return_value=mock_pdf):
