@@ -28,8 +28,8 @@ class TestConnectionManagement:
 
     def test_successful_connection(self, mock_mongodb_config):
         """Test successful MongoDB connection"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -48,8 +48,8 @@ class TestConnectionManagement:
             "auth_source": "admin"
         }
 
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -61,7 +61,7 @@ class TestConnectionManagement:
 
     def test_connection_failure_handling(self, mock_mongodb_config):
         """Test handling of MongoDB connection failures"""
-        with patch('pymongo.MongoClient') as mock_client:
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
             mock_client.side_effect = ConnectionFailure("Cannot connect to MongoDB")
 
             with pytest.raises(ConnectionFailure):
@@ -69,8 +69,8 @@ class TestConnectionManagement:
 
     def test_server_selection_timeout(self, mock_mongodb_config):
         """Test handling of server selection timeout"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.side_effect = ServerSelectionTimeoutError("Server selection timeout")
 
@@ -86,8 +86,8 @@ class TestConnectionManagement:
         ]
 
         for config in valid_configs:
-            with patch('pymongo.MongoClient') as mock_client:
-                mock_instance = Mock()
+            with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+                mock_instance = MagicMock()
                 mock_client.return_value = mock_instance
                 mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -97,8 +97,8 @@ class TestConnectionManagement:
 
     def test_database_selection(self, mock_mongodb_config):
         """Test database selection and access"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -116,14 +116,14 @@ class TestCollectionOperations:
 
     def test_create_collection_basic(self, mock_mongodb_config):
         """Test basic collection creation"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
-            mock_collection = Mock()
+            mock_collection = MagicMock()
             mock_db.create_collection.return_value = mock_collection
 
             manager = MongoDBManager(mock_mongodb_config)
@@ -137,12 +137,12 @@ class TestCollectionOperations:
 
     def test_hierarchical_collection_naming(self, mock_mongodb_config):
         """Test hierarchical collection naming convention"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
 
             manager = MongoDBManager(mock_mongodb_config)
@@ -163,8 +163,8 @@ class TestCollectionOperations:
 
     def test_collection_name_sanitization(self, mock_mongodb_config):
         """Test sanitization of collection names"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -188,12 +188,12 @@ class TestCollectionOperations:
 
     def test_list_collections(self, mock_mongodb_config):
         """Test listing existing collections"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
             mock_db.list_collection_names.return_value = [
                 "rpger.source_material.dnd.5th_edition.core_rulebook.players_handbook",
@@ -210,12 +210,12 @@ class TestCollectionOperations:
 
     def test_collection_exists_check(self, mock_mongodb_config):
         """Test checking if collection exists"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
             mock_db.list_collection_names.return_value = ["existing_collection"]
 
@@ -233,14 +233,14 @@ class TestDocumentOperations:
 
     def test_insert_document(self, mock_mongodb_config, sample_extraction_result):
         """Test inserting a document into a collection"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
-            mock_collection = Mock()
+            mock_collection = MagicMock()
             mock_db.__getitem__.return_value = mock_collection
             mock_collection.insert_one.return_value = Mock(inserted_id="test_id")
 
@@ -254,14 +254,14 @@ class TestDocumentOperations:
 
     def test_insert_multiple_documents(self, mock_mongodb_config):
         """Test inserting multiple documents"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
-            mock_collection = Mock()
+            mock_collection = MagicMock()
             mock_db.__getitem__.return_value = mock_collection
             mock_collection.insert_many.return_value = Mock(inserted_ids=["id1", "id2"])
 
@@ -280,18 +280,18 @@ class TestDocumentOperations:
 
     def test_query_documents(self, mock_mongodb_config):
         """Test querying documents from a collection"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
-            mock_collection = Mock()
+            mock_collection = MagicMock()
             mock_db.__getitem__.return_value = mock_collection
 
             # Mock query results
-            mock_cursor = Mock()
+            mock_cursor = MagicMock()
             mock_cursor.__iter__ = Mock(return_value=iter([
                 {"_id": "1", "title": "Test Document", "game_type": "D&D"},
                 {"_id": "2", "title": "Another Document", "game_type": "D&D"}
@@ -310,17 +310,17 @@ class TestDocumentOperations:
 
     def test_query_with_projection(self, mock_mongodb_config):
         """Test querying documents with field projection"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
-            mock_db = Mock()
+            mock_db = MagicMock()
             mock_instance.__getitem__.return_value = mock_db
-            mock_collection = Mock()
+            mock_collection = MagicMock()
             mock_db.__getitem__.return_value = mock_collection
 
-            mock_cursor = Mock()
+            mock_cursor = MagicMock()
             mock_cursor.__iter__ = Mock(return_value=iter([
                 {"_id": "1", "title": "Test Document"}  # Only projected fields
             ]))
@@ -379,7 +379,7 @@ class TestErrorHandling:
 
     def test_duplicate_key_error(self, mock_mongodb_config):
         """Test handling of duplicate key errors"""
-        with patch('pymongo.MongoClient') as mock_client:
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
@@ -400,8 +400,8 @@ class TestErrorHandling:
 
     def test_invalid_collection_name(self, mock_mongodb_config):
         """Test handling of invalid collection names"""
-        with patch('pymongo.MongoClient') as mock_client:
-            mock_instance = Mock()
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
+            mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}
 
@@ -423,7 +423,7 @@ class TestErrorHandling:
 
     def test_connection_loss_handling(self, mock_mongodb_config):
         """Test handling of connection loss during operations"""
-        with patch('pymongo.MongoClient') as mock_client:
+        with patch('Modules.mongodb_manager.MongoClient') as mock_client:
             mock_instance = MagicMock()
             mock_client.return_value = mock_instance
             mock_instance.admin.command.return_value = {"ok": 1}

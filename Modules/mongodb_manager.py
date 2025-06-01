@@ -55,8 +55,24 @@ MONGODB_CONFIG = {
 class MongoDBManager:
     """MongoDB connection and collection management"""
 
-    def __init__(self, debug: bool = False):
-        self.debug = debug
+    def __init__(self, config: Optional[Dict[str, Any]] = None, debug: bool = False):
+        # Support both old (config dict) and new (debug bool) constructor signatures
+        if isinstance(config, bool):
+            # Old signature: MongoDBManager(debug=True)
+            self.debug = config
+            self.config = None
+        elif isinstance(config, dict):
+            # New signature: MongoDBManager(config_dict)
+            self.debug = debug
+            self.config = config
+            # Extract database name from config for test compatibility
+            self.database_name = config.get("database_name", MONGODB_DATABASE)
+        else:
+            # Default case
+            self.debug = debug
+            self.config = None
+            self.database_name = MONGODB_DATABASE
+
         self.client = None
         self.database = None
         self.db = None  # Alias for database (for test compatibility)
@@ -72,27 +88,47 @@ class MongoDBManager:
     def _connect(self) -> bool:
         """Establish connection to MongoDB"""
         try:
+            # Use config if provided, otherwise use global settings
+            if self.config:
+                connection_string = self.config.get("connection_string", MONGODB_CONNECTION_STRING)
+                database_name = self.config.get("database_name", MONGODB_DATABASE)
+                host = self.config.get("host", MONGODB_HOST)
+                port = self.config.get("port", MONGODB_PORT)
+            else:
+                connection_string = MONGODB_CONNECTION_STRING
+                database_name = MONGODB_DATABASE
+                host = MONGODB_HOST
+                port = MONGODB_PORT
+
             if self.debug:
-                print(f"🔌 Connecting to MongoDB: {MONGODB_HOST}:{MONGODB_PORT}")
+                print(f"🔌 Connecting to MongoDB: {host}:{port}")
 
             # Create client with timeout
-            self.client = MongoClient(
-                MONGODB_CONNECTION_STRING,
-                serverSelectionTimeoutMS=5000,  # 5 second timeout
-                connectTimeoutMS=5000,
-                socketTimeoutMS=5000
-            )
+            client_kwargs = {
+                "serverSelectionTimeoutMS": 5000,  # 5 second timeout
+                "connectTimeoutMS": 5000,
+                "socketTimeoutMS": 5000
+            }
+
+            # Add authentication if provided in config
+            if self.config and self.config.get("username") and self.config.get("password"):
+                client_kwargs["username"] = self.config["username"]
+                client_kwargs["password"] = self.config["password"]
+                if self.config.get("auth_source"):
+                    client_kwargs["authSource"] = self.config["auth_source"]
+
+            self.client = MongoClient(connection_string, **client_kwargs)
 
             # Test connection
             self.client.admin.command('ping')
 
             # Get database
-            self.database = self.client[MONGODB_DATABASE]
+            self.database = self.client[database_name]
             self.db = self.database  # Set alias for test compatibility
             self.connected = True
 
             if self.debug:
-                print(f"✅ Connected to MongoDB database: {MONGODB_DATABASE}")
+                print(f"✅ Connected to MongoDB database: {database_name}")
 
             return True
 
@@ -100,7 +136,8 @@ class MongoDBManager:
             if self.debug:
                 print(f"❌ MongoDB connection failed: {e}")
             self.connected = False
-            return False
+            # Re-raise for tests that expect these exceptions
+            raise
         except Exception as e:
             if self.debug:
                 print(f"❌ MongoDB connection error: {e}")
@@ -626,17 +663,68 @@ class MongoDBManager:
         collection = self.database[collection_name]
         return collection.insert_one(document)
 
+    def insert_documents(self, collection_name: str, documents: List[Dict[str, Any]]) -> Any:
+        """Insert multiple documents (for test compatibility)"""
+        if not self.connected:
+            raise Exception("Not connected to MongoDB")
+        collection = self.database[collection_name]
+        return collection.insert_many(documents)
+
+    def query_documents(self, collection_name: str, query: Dict[str, Any], projection: Optional[Dict[str, Any]] = None):
+        """Query documents from a collection (for test compatibility)"""
+        if not self.connected:
+            raise Exception("Not connected to MongoDB")
+        collection = self.database[collection_name]
+        if projection:
+            return collection.find(query, projection)
+        else:
+            return collection.find(query)
+
+    def create_collection(self, collection_name: str) -> Any:
+        """Create a collection (for test compatibility)"""
+        if not self.connected:
+            raise Exception("Not connected to MongoDB")
+        return self.database.create_collection(collection_name)
+
+    def list_collections(self) -> List[str]:
+        """List all collections (for test compatibility)"""
+        if not self.connected:
+            return []
+        return self.database.list_collection_names()
+
+    def collection_exists(self, collection_name: str) -> bool:
+        """Check if collection exists (for test compatibility)"""
+        if not self.connected:
+            return False
+        return collection_name in self.database.list_collection_names()
+
     def generate_collection_name(self, metadata: Dict[str, Any]) -> str:
         """Generate collection name from metadata (for test compatibility)"""
-        game_type = metadata.get('game_type', 'unknown').lower().replace(' ', '_')
-        edition = metadata.get('edition', '').lower().replace(' ', '_')
-        book_type = metadata.get('book_type', '').lower().replace(' ', '_')
+        def normalize_name(name: str) -> str:
+            """Normalize name for collection naming"""
+            # Special case for D&D -> dnd
+            if name.lower() == 'd&d':
+                return 'dnd'
+            return (name.lower()
+                   .replace('&', 'and')
+                   .replace(' ', '_')
+                   .replace("'", '')
+                   .replace('.', '_')
+                   .replace('-', '_'))
 
-        parts = ['source_material', game_type]
+        game_type = normalize_name(metadata.get('game_type', 'unknown'))
+        edition = normalize_name(metadata.get('edition', ''))
+        book_type = normalize_name(metadata.get('book_type', ''))
+        collection = normalize_name(metadata.get('collection', ''))
+
+        # Build hierarchical name: rpger.source_material.game.edition.book_type.collection
+        parts = ['rpger', 'source_material', game_type]
         if edition:
             parts.append(edition)
         if book_type:
             parts.append(book_type)
+        if collection:
+            parts.append(collection)
 
         return '.'.join(parts)
 
