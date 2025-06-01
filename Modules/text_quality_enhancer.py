@@ -133,8 +133,10 @@ class TextQualityEnhancer:
 
             # Spacing issues (preserve line structure)
             (r'[ \t]+', ' '),    # Multiple spaces/tabs to single space (preserve newlines)
-            # Only join single letters that are clearly OCR artifacts
-            (r'\b([a-z])\s+([a-z])\b(?![a-z])', r'\1\2'),  # More conservative letter joining
+            # Join spaced letters within words - target OCR artifacts specifically
+            (r'([a-zA-Z]{2,})\s+([IlL]{1,2})\b', r'\1\2'),  # Join words ending with spaced I/l/L (common OCR)
+            (r'\b([a-zA-Z])\s+([a-zA-Z])\s+([a-zA-Z])\b(?=\s|$|\.)', r'\1\2\3'),  # 3 single letters forming a word
+            (r'\b([a-zA-Z])\s+([a-zA-Z])\b(?=\s|$|\.)', r'\1\2'),  # 2 single letters at word end
             (r'([A-Z])\s+([A-Z])', r'\1\2'),  # Remove spaces in acronyms
 
             # Special characters
@@ -522,9 +524,9 @@ class TextQualityEnhancer:
             matches = re.findall(pattern, text)
             issues += len(matches)
 
-        # Calculate score
+        # Calculate score - use a more reasonable penalty rate
         error_rate = issues / total_chars
-        return max(0, (1 - error_rate * 10) * 100)  # Penalize heavily for artifacts
+        return max(0, (1 - error_rate * 2) * 100)  # More balanced penalty for artifacts
 
     def _calculate_readability_score(self, text: str) -> float:
         """Calculate readability score based on structure"""
