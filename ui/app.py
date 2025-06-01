@@ -130,6 +130,32 @@ def index():
     version_info = get_version_info()
     return render_template('index.html', version_info=version_info)
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring and CI/CD"""
+    try:
+        # Basic health check - verify app is running
+        health_status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'version': __version__,
+            'environment': __environment__
+        }
+
+        # Optional: Add more detailed health checks
+        # - Database connectivity
+        # - External service availability
+        # For now, just return basic status
+
+        return jsonify(health_status), 200
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/version')
 def get_version():
     """Get application version information"""

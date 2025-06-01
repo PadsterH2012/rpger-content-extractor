@@ -21,6 +21,8 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, Dupli
 from Modules.mongodb_manager import MongoDBManager
 
 
+@pytest.mark.unit
+@pytest.mark.mongodb
 class TestConnectionManagement:
     """Test MongoDB connection management"""
 
@@ -107,6 +109,8 @@ class TestConnectionManagement:
             assert manager.database_name == mock_mongodb_config["database_name"]
 
 
+@pytest.mark.unit
+@pytest.mark.mongodb
 class TestCollectionOperations:
     """Test collection creation and management"""
 
@@ -222,6 +226,8 @@ class TestCollectionOperations:
             assert manager.collection_exists("non_existing_collection") == False
 
 
+@pytest.mark.unit
+@pytest.mark.mongodb
 class TestDocumentOperations:
     """Test document insertion, querying, and management"""
 
@@ -346,6 +352,8 @@ class TestDocumentOperations:
         pass
 
 
+@pytest.mark.unit
+@pytest.mark.mongodb
 class TestIndexManagement:
     """Test index creation and management"""
 
@@ -364,6 +372,8 @@ class TestIndexManagement:
         pass
 
 
+@pytest.mark.unit
+@pytest.mark.mongodb
 class TestErrorHandling:
     """Test error handling and edge cases"""
 

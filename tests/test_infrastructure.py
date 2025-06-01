@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 
+@pytest.mark.unit
 class TestInfrastructure:
     """Test that the test infrastructure is working"""
     
@@ -76,6 +77,7 @@ class TestInfrastructure:
         assert mock_page.rect.width == 612.0
 
 
+@pytest.mark.unit
 class TestSampleData:
     """Test that sample data fixtures are working"""
     
@@ -132,6 +134,7 @@ class TestSampleData:
         assert "isbn" in metadata
 
 
+@pytest.mark.unit
 class TestConfigurationFixtures:
     """Test configuration fixtures"""
     

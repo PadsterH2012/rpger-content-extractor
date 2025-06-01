@@ -485,6 +485,17 @@ class TestSystemStatus:
         with app.test_client() as client:
             yield client
 
+    def test_health_endpoint(self, client):
+        """Test health check endpoint for CI/CD"""
+        response = client.get('/health')
+        assert response.status_code == 200
+
+        result = json.loads(response.data)
+        assert result['status'] == 'healthy'
+        assert 'timestamp' in result
+        assert 'version' in result
+        assert 'environment' in result
+
     def test_status_endpoint(self, client):
         """Test system status endpoint"""
         with patch('Modules.multi_collection_manager.MultiGameCollectionManager') as mock_chroma:
