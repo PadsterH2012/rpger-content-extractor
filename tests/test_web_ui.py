@@ -231,24 +231,26 @@ class TestAnalyzeEndpoint:
                             'source': 'pdf_metadata'
                         }
 
-                        data = {
-                            'filepath': temp_pdf,
-                            'ai_provider': 'mock',
-                            'content_type': 'source_material',
-                            'run_confidence_test': False
-                        }
+                        # Mock the analysis_results global dict
+                        with patch('ui.app.analysis_results', {}) as mock_analysis_results:
+                            data = {
+                                'filepath': temp_pdf,
+                                'ai_provider': 'mock',
+                                'content_type': 'source_material',
+                                'run_confidence_test': False
+                            }
 
-                        response = client.post('/analyze',
-                                             data=json.dumps(data),
-                                             content_type='application/json')
+                            response = client.post('/analyze',
+                                                 data=json.dumps(data),
+                                                 content_type='application/json')
 
-                        assert response.status_code == 200
-                        result = json.loads(response.data)
+                            assert response.status_code == 200
+                            result = json.loads(response.data)
 
-                        assert result['success'] == True
-                        assert 'session_id' in result
-                        assert 'analysis' in result
-                        assert result['analysis']['game_type'] == 'D&D'
+                            assert result['success'] == True
+                            assert 'session_id' in result
+                            assert 'analysis' in result
+                            assert result['analysis']['game_type'] == 'D&D'
 
     def test_analyze_file_not_found(self, client):
         """Test analysis with non-existent file"""
@@ -327,16 +329,25 @@ class TestAnalyzeEndpoint:
             # Mock the set_session_tracking method
             mock_detector.set_session_tracking = Mock()
 
-            # Mock confidence tester (archive module)
-            with patch('sys.path') as mock_path:
-                with patch('archive.confidence_tester.run_quick_test') as mock_quick_test:
-                    mock_quick_test.return_value = {
+            # Mock confidence tester (archive module import)
+            with patch('sys.path.append') as mock_path_append:
+                with patch('builtins.__import__') as mock_import:
+                    # Mock the dynamic import of confidence_tester
+                    mock_confidence_module = Mock()
+                    mock_confidence_module.run_quick_test = Mock(return_value={
                         'quick_confidence': 85.0,
                         'recommended_method': 'text',
                         'text_confidence': 85.0,
                         'layout_confidence': 80.0,
                         'issues': []
-                    }
+                    })
+
+                    def mock_import_side_effect(name, *args, **kwargs):
+                        if name == 'confidence_tester':
+                            return mock_confidence_module
+                        return __import__(name, *args, **kwargs)
+
+                    mock_import.side_effect = mock_import_side_effect
 
                     # Mock token tracker
                     with patch('Modules.token_usage_tracker.get_tracker') as mock_tracker:
@@ -358,21 +369,23 @@ class TestAnalyzeEndpoint:
                                     'source': 'pdf_metadata'
                                 }
 
-                                data = {
-                                    'filepath': temp_pdf,
-                                    'ai_provider': 'mock',
-                                    'run_confidence_test': True
-                                }
+                                # Mock the analysis_results global dict
+                                with patch('ui.app.analysis_results', {}) as mock_analysis_results:
+                                    data = {
+                                        'filepath': temp_pdf,
+                                        'ai_provider': 'mock',
+                                        'run_confidence_test': True
+                                    }
 
-                                response = client.post('/analyze',
-                                                     data=json.dumps(data),
-                                                     content_type='application/json')
+                                    response = client.post('/analyze',
+                                                         data=json.dumps(data),
+                                                         content_type='application/json')
 
-                                assert response.status_code == 200
-                                result = json.loads(response.data)
+                                    assert response.status_code == 200
+                                    result = json.loads(response.data)
 
-                                assert result['success'] == True
-                                assert 'confidence' in result
+                                    assert result['success'] == True
+                                    assert 'confidence' in result
 
 
 class TestExtractEndpoint:
