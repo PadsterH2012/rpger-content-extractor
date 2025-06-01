@@ -190,7 +190,11 @@ class AIGameDetector:
         mock_content = {
             "text_sample": content[:2000],  # First 2000 chars
             "metadata": {},
-            "page_count": 1
+            "page_count": 1,
+            "filename": "test_content.txt",
+            "total_pages": 1,
+            "analysis_pages": [{"page_number": 1, "text": content, "word_count": len(content.split())}],
+            "combined_text": content
         }
         return self._perform_ai_analysis(mock_content)
 
