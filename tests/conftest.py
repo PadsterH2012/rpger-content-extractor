@@ -88,6 +88,21 @@ def temp_dir():
 
 
 @pytest.fixture
+def test_pdf_fixtures():
+    """Get paths to test PDF fixtures"""
+    fixtures_dir = Path(__file__).parent / "fixtures" / "pdfs"
+    return {
+        "test_pdf": fixtures_dir / "test.pdf",
+        "novel_pdf": fixtures_dir / "novel.pdf",
+        "empty_pdf": fixtures_dir / "empty.pdf",
+        "large_pdf": fixtures_dir / "large.pdf",
+        "scanned_pdf": fixtures_dir / "scanned.pdf",
+        "special_chars_pdf": fixtures_dir / "special_chars.pdf",
+        "test_book_pdf": fixtures_dir / "test_book.pdf"
+    }
+
+
+@pytest.fixture
 def sample_pdf_metadata():
     """Sample PDF metadata for testing"""
     return {

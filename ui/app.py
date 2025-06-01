@@ -33,6 +33,12 @@ app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200MB max file size
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching
 app.config['UPLOAD_TIMEOUT'] = 300  # 5 minutes for upload timeout
 
+# Handle file size limit errors
+@app.errorhandler(413)
+def handle_file_too_large(error):
+    """Handle file too large errors"""
+    return jsonify({'error': f'File too large. Maximum size is {app.config["MAX_CONTENT_LENGTH"] // (1024*1024)}MB'}), 400
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

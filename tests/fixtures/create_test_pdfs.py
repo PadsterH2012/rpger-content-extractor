@@ -49,7 +49,11 @@ def create_simple_pdf(filename: str, content: str):
 
 def main():
     """Create all test PDF files"""
-    
+
+    # Create PDFs in the pdfs subdirectory
+    pdfs_dir = Path(__file__).parent / "pdfs"
+    pdfs_dir.mkdir(exist_ok=True)
+
     test_files = {
         "test.pdf": """DUNGEONS & DRAGONS
 Player's Handbook
@@ -112,7 +116,8 @@ This is a test book for metadata extraction."""
     
     for filename, content in test_files.items():
         try:
-            create_simple_pdf(filename, content)
+            filepath = pdfs_dir / filename
+            create_simple_pdf(str(filepath), content)
         except Exception as e:
             print(f"❌ Failed to create {filename}: {e}")
     

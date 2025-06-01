@@ -324,6 +324,10 @@ class MultiGamePDFProcessor:
         else:
             return "General"
 
+    def _extract_novel_elements(self, doc, game_metadata: Dict[str, str]) -> Dict[str, Any]:
+        """Extract novel elements (for test compatibility)"""
+        return self._extract_novel_content(doc, game_metadata)
+
     def _extract_novel_content(self, doc, game_metadata: Dict[str, str]) -> Dict[str, Any]:
         """Extract content from novels with narrative-focused processing"""
         self.logger.info("🔖 Processing novel content with narrative extraction")
