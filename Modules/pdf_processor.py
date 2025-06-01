@@ -137,6 +137,7 @@ class MultiGamePDFProcessor:
             self.logger.info(f"📚 ISBN: {isbn_data['isbn']}")
 
         # Extract content with game context - different workflows for novels vs source material
+        novel_data = {}  # Initialize for later use
         if game_metadata['content_type'] == 'novel':
             # MEMORY OPTIMIZATION: Disable text enhancement for novels to reduce memory usage
             original_text_enhancement = self.enable_text_enhancement
@@ -181,13 +182,23 @@ class MultiGamePDFProcessor:
         if game_metadata['content_type'] == 'novel' and isbn_data.get('isbn'):
             self._add_to_isbn_blacklist(isbn_data['isbn'], complete_metadata, extracted_sections)
 
-        return {
+        result = {
             "metadata": complete_metadata,
             "sections": extracted_sections,
             "extraction_summary": self._build_extraction_summary(
                 extracted_sections, game_metadata
             )
         }
+
+        # For novels, add novel_elements for test compatibility
+        if game_metadata['content_type'] == 'novel':
+            result["novel_elements"] = {
+                "narrative_structure": novel_data.get("narrative_structure", {}),
+                "character_data": novel_data.get("character_data", {}),
+                "extraction_metadata": novel_data.get("extraction_metadata", {})
+            }
+
+        return result
 
     def _extract_sample_content(self, doc, max_pages: int = 3, max_chars: int = 3000) -> str:
         """Extract sample content for game type detection"""

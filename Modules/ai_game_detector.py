@@ -202,8 +202,12 @@ class AIGameDetector:
         # Validate and enhance result
         validated_result = self._validate_ai_result(ai_result, pdf_path)
 
-        # Generate collection name
+        # Generate collection name - ensure it's always present
         validated_result["collection_name"] = self._generate_collection_name(validated_result)
+
+        # Double-check collection_name is never None or empty
+        if not validated_result.get("collection_name"):
+            validated_result["collection_name"] = "unknown_content"
 
         if self.debug:
             print(f"🎯 AI Detection Result: {validated_result['game_type']} {validated_result['edition']} {validated_result['book_type']}")

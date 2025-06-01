@@ -349,6 +349,12 @@ def upload_file():
         logger.error(f"Upload error: {e}")
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
+
+        # Check if this is a file size error that should return 400
+        error_str = str(e).lower()
+        if 'file too large' in error_str or 'request entity too large' in error_str:
+            return jsonify({'error': f'File too large. Maximum size is {app.config["MAX_CONTENT_LENGTH"] // (1024*1024)}MB'}), 400
+
         return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 @app.route('/analyze', methods=['POST'])
