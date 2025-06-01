@@ -215,24 +215,40 @@ class TestAnalyzeEndpoint:
                 mock_tracker.return_value = mock_tracker_instance
                 mock_tracker_instance.start_session = Mock()
 
-                data = {
-                    'filepath': temp_pdf,
-                    'ai_provider': 'mock',
-                    'content_type': 'source_material',
-                    'run_confidence_test': False
-                }
+                # Mock fitz (PyMuPDF) for ISBN extraction
+                with patch('fitz.open') as mock_fitz:
+                    mock_doc = Mock()
+                    mock_doc.close = Mock()
+                    mock_fitz.return_value = mock_doc
 
-                response = client.post('/analyze',
-                                     data=json.dumps(data),
-                                     content_type='application/json')
+                    # Mock PDF processor for ISBN extraction
+                    with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
+                        mock_processor = Mock()
+                        mock_processor_class.return_value = mock_processor
+                        mock_processor._extract_isbn.return_value = {
+                            'isbn': '9780786965601',
+                            'isbn_13': '9780786965601',
+                            'source': 'pdf_metadata'
+                        }
 
-                assert response.status_code == 200
-                result = json.loads(response.data)
+                        data = {
+                            'filepath': temp_pdf,
+                            'ai_provider': 'mock',
+                            'content_type': 'source_material',
+                            'run_confidence_test': False
+                        }
 
-                assert result['success'] == True
-                assert 'session_id' in result
-                assert 'analysis' in result
-                assert result['analysis']['game_type'] == 'D&D'
+                        response = client.post('/analyze',
+                                             data=json.dumps(data),
+                                             content_type='application/json')
+
+                        assert response.status_code == 200
+                        result = json.loads(response.data)
+
+                        assert result['success'] == True
+                        assert 'session_id' in result
+                        assert 'analysis' in result
+                        assert result['analysis']['game_type'] == 'D&D'
 
     def test_analyze_file_not_found(self, client):
         """Test analysis with non-existent file"""
@@ -311,36 +327,52 @@ class TestAnalyzeEndpoint:
             # Mock the set_session_tracking method
             mock_detector.set_session_tracking = Mock()
 
-            # Mock confidence tester
-            with patch('Modules.confidence_tester.ConfidenceTester') as mock_confidence_class:
-                mock_confidence = Mock()
-                mock_confidence_class.return_value = mock_confidence
-                mock_confidence.test_extraction_confidence.return_value = {
-                    'overall_confidence': 85.0,
-                    'recommendation': 'proceed'
-                }
-
-                # Mock token tracker
-                with patch('Modules.token_usage_tracker.get_tracker') as mock_tracker:
-                    mock_tracker_instance = Mock()
-                    mock_tracker.return_value = mock_tracker_instance
-                    mock_tracker_instance.start_session = Mock()
-
-                    data = {
-                        'filepath': temp_pdf,
-                        'ai_provider': 'mock',
-                        'run_confidence_test': True
+            # Mock confidence tester (archive module)
+            with patch('sys.path') as mock_path:
+                with patch('archive.confidence_tester.run_quick_test') as mock_quick_test:
+                    mock_quick_test.return_value = {
+                        'quick_confidence': 85.0,
+                        'recommended_method': 'text',
+                        'text_confidence': 85.0,
+                        'layout_confidence': 80.0,
+                        'issues': []
                     }
 
-                    response = client.post('/analyze',
-                                         data=json.dumps(data),
-                                         content_type='application/json')
+                    # Mock token tracker
+                    with patch('Modules.token_usage_tracker.get_tracker') as mock_tracker:
+                        mock_tracker_instance = Mock()
+                        mock_tracker.return_value = mock_tracker_instance
+                        mock_tracker_instance.start_session = Mock()
 
-                    assert response.status_code == 200
-                    result = json.loads(response.data)
+                        # Mock fitz and PDF processor for ISBN extraction
+                        with patch('fitz.open') as mock_fitz:
+                            mock_doc = Mock()
+                            mock_doc.close = Mock()
+                            mock_fitz.return_value = mock_doc
 
-                    assert result['success'] == True
-                    assert 'confidence' in result
+                            with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
+                                mock_processor = Mock()
+                                mock_processor_class.return_value = mock_processor
+                                mock_processor._extract_isbn.return_value = {
+                                    'isbn': '9780786965601',
+                                    'source': 'pdf_metadata'
+                                }
+
+                                data = {
+                                    'filepath': temp_pdf,
+                                    'ai_provider': 'mock',
+                                    'run_confidence_test': True
+                                }
+
+                                response = client.post('/analyze',
+                                                     data=json.dumps(data),
+                                                     content_type='application/json')
+
+                                assert response.status_code == 200
+                                result = json.loads(response.data)
+
+                                assert result['success'] == True
+                                assert 'confidence' in result
 
 
 class TestExtractEndpoint:
@@ -471,16 +503,13 @@ class TestErrorHandling:
 
     def test_invalid_json_handling(self, client):
         """Test handling of invalid JSON in requests"""
-        # Mock the request.get_json() to raise an exception for invalid JSON
-        with patch('ui.app.request') as mock_request:
-            mock_request.get_json.side_effect = Exception("Invalid JSON")
+        # Send actual invalid JSON to test Flask's built-in JSON parsing
+        response = client.post('/analyze',
+                             data='{"invalid": json}',  # Missing quotes around json
+                             content_type='application/json')
 
-            response = client.post('/analyze',
-                                 data='invalid json',
-                                 content_type='application/json')
-
-            # The app should handle the JSON parsing error and return 500
-            assert response.status_code == 500
+        # Flask should return 400 for malformed JSON
+        assert response.status_code == 400
 
     def test_missing_required_fields(self, client):
         """Test handling of missing required fields"""

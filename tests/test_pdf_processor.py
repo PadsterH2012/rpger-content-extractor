@@ -564,7 +564,7 @@ class TestErrorHandling:
                 result = processor.extract_pdf(empty_pdf)
 
                 assert result is not None
-                assert result["metadata"]["confidence"] == 0.0
+                assert result["metadata"]["detection_confidence"] == 0.0
 
     def test_ai_detection_failure(self, mock_ai_config):
         """Test handling when AI game detection fails"""
