@@ -11,6 +11,12 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 import fitz  # PyMuPDF
 
+# AI provider imports (for test mocking)
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
+
 class AIGameDetector:
     """AI-powered game type detection from PDF content analysis"""
 

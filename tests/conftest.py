@@ -73,6 +73,10 @@ class MockPDFPage:
                 ]
             }
         return self.text
+    
+    def get_images(self) -> list:
+        """Mock method to return empty list of images"""
+        return []
 
 
 # ============================================================================

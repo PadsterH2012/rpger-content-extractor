@@ -131,9 +131,10 @@ class TextQualityEnhancer:
             (r'cl', 'd'),     # cl to d
             (r'li', 'h'),     # li to h
 
-            # Spacing issues
-            (r'\s+', ' '),    # Multiple spaces to single
-            (r'([a-z])\s+([a-z])', r'\1\2'),  # Remove spaces within words
+            # Spacing issues (preserve line structure)
+            (r'[ \t]+', ' '),    # Multiple spaces/tabs to single space (preserve newlines)
+            # Only join single letters that are clearly OCR artifacts
+            (r'\b([a-z])\s+([a-z])\b(?![a-z])', r'\1\2'),  # More conservative letter joining
             (r'([A-Z])\s+([A-Z])', r'\1\2'),  # Remove spaces in acronyms
 
             # Special characters
@@ -142,9 +143,9 @@ class TextQualityEnhancer:
             (r'—', '-'),      # Em dash to hyphen
             (r'–', '-'),      # En dash to hyphen
 
-            # Line break artifacts
+            # Line break artifacts (preserve paragraph structure)
             (r'-\s*\n\s*', ''),  # Hyphenated line breaks
-            (r'\n\s*\n\s*\n', '\n\n'),  # Multiple line breaks
+            (r'\n\s*\n\s*\n+', '\n\n'),  # Multiple line breaks to double
         ]
 
     def _build_rpg_patterns(self) -> List[Tuple[str, str]]:
@@ -237,10 +238,10 @@ class TextQualityEnhancer:
             return text, []
 
         corrections = []
-        words = text.split()
-        corrected_words = []
-
-        for word in words:
+        
+        # Use regex to find words while preserving whitespace
+        def replace_word(match):
+            word = match.group(0)
             # Clean word for checking (remove punctuation)
             clean_word = re.sub(r'[^\w]', '', word.lower())
 
@@ -256,21 +257,20 @@ class TextQualityEnhancer:
                     if aggressive or self._should_correct(clean_word, best_suggestion):
                         # Preserve original case and punctuation
                         corrected_word = self._preserve_case_punctuation(word, best_suggestion)
-                        corrected_words.append(corrected_word)
 
                         corrections.append({
                             'original': word,
                             'corrected': corrected_word,
                             'confidence': self._correction_confidence(clean_word, best_suggestion)
                         })
-                    else:
-                        corrected_words.append(word)
-                else:
-                    corrected_words.append(word)
-            else:
-                corrected_words.append(word)
+                        return corrected_word
 
-        return ' '.join(corrected_words), corrections
+            return word
+
+        # Replace words while preserving whitespace
+        corrected_text = re.sub(r'\b\w+\b', replace_word, text)
+        
+        return corrected_text, corrections
 
     def _should_correct(self, original: str, suggestion: str) -> bool:
         """Determine if a correction should be applied"""
@@ -335,13 +335,15 @@ class TextQualityEnhancer:
         # Stage 1: Smart newline replacement
         text = self._smart_newline_cleanup(text)
 
-        # Stage 2: Remove excessive whitespace
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+        # Stage 2: Clean up excessive whitespace (but preserve newlines)
+        # Replace multiple spaces with single space, but keep newlines
+        text = re.sub(r'[ \t]+', ' ', text)  # Only collapse spaces and tabs
+        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)  # Collapse multiple newlines to double
 
-        # Stage 3: Clean up punctuation
+        # Stage 3: Clean up punctuation (but preserve line structure)
         text = re.sub(r'\s+([,.!?;:])', r'\1', text)
-        text = re.sub(r'([.!?])\s*([A-Z])', r'\1 \2', text)
+        # Only fix spacing within lines, not across newlines
+        text = re.sub(r'([.!?])[ \t]+([A-Z])', r'\1 \2', text)
 
         return text.strip()
 
@@ -351,80 +353,90 @@ class TextQualityEnhancer:
         lines = text.split('\n')
         processed_lines = []
 
-        for i, line in enumerate(lines):
-            line = line.strip()
-            if not line:  # Empty line
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            if not line:  # Empty line - preserve for paragraph breaks
                 processed_lines.append('')
+                i += 1
                 continue
 
-            # Check if this line should be joined with the next
-            if i < len(lines) - 1:
-                next_line = lines[i + 1].strip()
+            # Always preserve lines that look like structural elements (headings, chapters)
+            if self._is_structural_line(line):
+                processed_lines.append(line)
+                i += 1
+                continue
 
+            # For non-structural lines, only join if they are NOT separated by empty lines
+            # Check if there's an empty line before next content line
+            next_content_idx = i + 1
+            while next_content_idx < len(lines) and not lines[next_content_idx].strip():
+                next_content_idx += 1
+                
+            # If there's an empty line between current and next content, don't join
+            if next_content_idx > i + 1:
+                # Add period if line doesn't end with punctuation
+                if line and not line.endswith(('.', '!', '?', ':', ';', ',', '-', '—', '–')):
+                    processed_lines.append(line + '.')
+                else:
+                    processed_lines.append(line)
+                i += 1
+                continue
+                
+            # For lines not separated by empty lines, be more conservative about joining
+            if next_content_idx < len(lines):
+                next_line = lines[next_content_idx].strip()
+                
                 # Don't join if current line ends with sentence-ending punctuation
                 if line.endswith(('.', '!', '?', ':', ';')):
                     processed_lines.append(line)
+                    i += 1
                     continue
 
-                # Don't join if next line starts with capital letter (likely new sentence)
+                # Don't join if next line starts with capital (new sentence/paragraph)
                 if next_line and next_line[0].isupper():
-                    # But do join if current line doesn't end with punctuation
                     if not line.endswith((',', '-', '—', '–')):
-                        processed_lines.append(line + '.')  # Add period to complete sentence
+                        processed_lines.append(line + '.')
                     else:
                         processed_lines.append(line)
+                    i += 1
                     continue
 
-                # Don't join if next line looks like a list item or heading
-                if next_line and (
-                    next_line.startswith(('•', '-', '*', '1.', '2.', '3.', '4.', '5.')) or
-                    next_line.isupper() or
-                    len(next_line.split()) <= 3  # Short lines are often headings
-                ):
-                    processed_lines.append(line + '.')  # Complete the sentence
+                # Don't join if next line is structural
+                if self._is_structural_line(next_line):
+                    if not line.endswith(('.', '!', '?', ':', ';', ',', '-', '—', '–')):
+                        processed_lines.append(line + '.')
+                    else:
+                        processed_lines.append(line)
+                    i += 1
                     continue
 
-                # Join lines that appear to be continuation of same sentence
-                if next_line and not next_line[0].isupper():
-                    # Add space instead of newline for continuation
-                    processed_lines.append(line + ' ' + next_line)
-                    lines[i + 1] = ''  # Mark next line as processed
-                    continue
-
-            # Default: keep the line as is, but add period if it doesn't end with punctuation
+            # Default: keep line as is
             if line and not line.endswith(('.', '!', '?', ':', ';', ',', '-', '—', '–')):
                 processed_lines.append(line + '.')
             else:
                 processed_lines.append(line)
+            i += 1
 
-        # Rejoin with newlines, but convert single newlines to spaces where appropriate
-        result = []
-        for i, line in enumerate(processed_lines):
-            if not line:  # Empty line - preserve paragraph breaks
-                if result and result[-1]:  # Don't add multiple empty lines
-                    result.append('')
-                continue
+        return '\n'.join(processed_lines)
 
-            result.append(line)
-
-        # Join with spaces for better readability, but preserve paragraph breaks
-        final_text = []
-        current_paragraph = []
-
-        for line in result:
-            if not line:  # Empty line indicates paragraph break
-                if current_paragraph:
-                    final_text.append(' '.join(current_paragraph))
-                    current_paragraph = []
-                final_text.append('')  # Preserve paragraph break
-            else:
-                current_paragraph.append(line)
-
-        # Add final paragraph
-        if current_paragraph:
-            final_text.append(' '.join(current_paragraph))
-
-        return '\n'.join(final_text)
+    def _is_structural_line(self, line: str) -> bool:
+        """Check if a line represents structural text like headings"""
+        line = line.strip()
+        if not line:
+            return False
+        
+        # Check for chapter/section patterns
+        if re.match(r'^(Chapter|Section|Part|Appendix)\s+\d+', line, re.IGNORECASE):
+            return True
+        
+        # Check for short lines that might be headings (but not single words)
+        words = line.split()
+        if len(words) >= 2 and len(words) <= 5 and line.endswith(':'):
+            return True
+            
+        return False
 
     def _assess_text_quality(self, text: str) -> QualityMetrics:
         """Assess overall text quality and provide metrics"""

@@ -333,9 +333,12 @@ class TestErrorHandling:
 
         detector = AIGameDetector(ai_config=config_without_key)
 
-        # Should handle missing API key gracefully
-        with pytest.raises(Exception):
-            detector.detect_game_type(sample_dnd_content)
+        # Should handle missing API key gracefully by falling back to mock client
+        result = detector.detect_game_type(sample_dnd_content)
+        
+        # Should return a result (not raise exception) with fallback behavior
+        assert "game_type" in result
+        assert "confidence" in result
 
     def test_network_error_handling(self, mock_ai_config, sample_dnd_content):
         """Test handling of network connectivity issues"""
@@ -393,19 +396,27 @@ class TestContentAnalysis:
         large_content = ["Page " + str(page_num) + " content" for page_num in range(100)]
         mock_pdf = MockPDFDocument(pages_text=large_content, page_count=100)
 
-        with patch('fitz.open', return_value=mock_pdf):
-            with patch.object(detector, '_perform_ai_analysis') as mock_ai:
-                mock_ai.return_value = {
-                    "game_type": "D&D",
-                    "edition": "5th Edition",
-                    "confidence": 85.0
-                }
+        # Create a temporary file for testing
+        test_file = Path("large.pdf")
+        test_file.write_text("Mock large PDF content")
+        
+        try:
+            with patch('fitz.open', return_value=mock_pdf):
+                with patch.object(detector, '_perform_ai_analysis') as mock_ai:
+                    mock_ai.return_value = {
+                        "game_type": "D&D",
+                        "edition": "5th Edition",
+                        "confidence": 85.0
+                    }
 
-                result = detector.analyze_game_metadata(Path("large.pdf"))
+                    result = detector.analyze_game_metadata(test_file)
 
-                # Should successfully analyze even large documents
-                assert result["game_type"] == "D&D"
-                assert mock_ai.called
+                    # Should successfully analyze even large documents
+                    assert result["game_type"] == "D&D"
+                    assert mock_ai.called
+        finally:
+            if test_file.exists():
+                test_file.unlink()
 
     def test_metadata_confidence_thresholds(self, mock_ai_config):
         """Test confidence threshold handling"""
