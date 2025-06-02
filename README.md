@@ -118,21 +118,21 @@ open http://localhost:5000
 ## 📋 Requirements
 
 ### 🚀 Production Mode
-- Docker & Docker Compose
+- Docker & Docker Compose (standalone or plugin)
 - 500MB+ RAM available
 - 1GB+ disk space
 - External MongoDB instance
 - External ChromaDB instance
 
 ### 🛠️ Development Mode
-- Docker & Docker Compose
+- Docker & Docker Compose (standalone or plugin)
 - 1GB+ RAM available
 - 2GB+ disk space
 - External MongoDB instance
 - External ChromaDB instance
 
 ### 🗄️ Full Stack Mode
-- Docker & Docker Compose
+- Docker & Docker Compose (standalone or plugin)
 - 2GB+ RAM available
 - 4GB+ disk space
 - No external databases needed
@@ -178,10 +178,11 @@ rpger-extractor/
 ```
 
 ### 🛡️ **Safety Features**
-- **Dependency Checking**: Verifies Docker and Docker Compose installation
+- **Dependency Checking**: Verifies Docker and Docker Compose installation (both standalone and plugin versions)
 - **Non-destructive**: Won't overwrite existing `.env` files without permission
 - **Backup Creation**: Automatically backs up existing configuration
 - **Error Handling**: Graceful failure with helpful error messages
+- **Version Compatibility**: Automatically detects and uses correct Docker Compose command
 
 ---
 

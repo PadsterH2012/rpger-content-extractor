@@ -48,19 +48,27 @@ print_error() {
 
 check_dependencies() {
     print_step "Checking dependencies..."
-    
+
     if ! command -v docker &> /dev/null; then
         print_error "Docker is not installed. Please install Docker first."
         echo "Visit: https://docs.docker.com/get-docker/"
         exit 1
     fi
-    
-    if ! command -v docker-compose &> /dev/null; then
+
+    # Check for Docker Compose (both standalone and plugin versions)
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+        print_success "Found docker-compose (standalone version)"
+    elif docker compose version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+        print_success "Found docker compose (plugin version)"
+    else
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         echo "Visit: https://docs.docker.com/compose/install/"
+        echo "Or install Docker Desktop which includes Docker Compose"
         exit 1
     fi
-    
+
     print_success "Dependencies check passed"
 }
 
@@ -294,48 +302,48 @@ create_startup_scripts() {
     print_step "Creating startup scripts..."
 
     # Production startup script
-    cat > start-production.sh << 'STARTEOF'
+    cat > start-production.sh << STARTEOF
 #!/bin/bash
 echo "🚀 Starting RPGer Content Extractor (Production Mode)"
-docker-compose pull
-docker-compose up -d
+$DOCKER_COMPOSE_CMD pull
+$DOCKER_COMPOSE_CMD up -d
 echo "✅ Started! Access at: http://localhost:5000"
-echo "📊 Check status: docker-compose ps"
-echo "📋 View logs: docker-compose logs -f app"
+echo "📊 Check status: $DOCKER_COMPOSE_CMD ps"
+echo "📋 View logs: $DOCKER_COMPOSE_CMD logs -f app"
 STARTEOF
     chmod +x start-production.sh
 
     # Development startup script
-    cat > start-development.sh << 'STARTEOF'
+    cat > start-development.sh << STARTEOF
 #!/bin/bash
 echo "🛠️ Starting RPGer Content Extractor (Development Mode)"
-docker-compose -f docker-compose.dev.yml up -d --build
+$DOCKER_COMPOSE_CMD -f docker-compose.dev.yml up -d --build
 echo "✅ Started! Access at: http://localhost:5000"
-echo "📊 Check status: docker-compose -f docker-compose.dev.yml ps"
-echo "📋 View logs: docker-compose -f docker-compose.dev.yml logs -f app"
+echo "📊 Check status: $DOCKER_COMPOSE_CMD -f docker-compose.dev.yml ps"
+echo "📋 View logs: $DOCKER_COMPOSE_CMD -f docker-compose.dev.yml logs -f app"
 STARTEOF
     chmod +x start-development.sh
 
     # Full stack startup script
-    cat > start-fullstack.sh << 'STARTEOF'
+    cat > start-fullstack.sh << STARTEOF
 #!/bin/bash
 echo "🗄️ Starting RPGer Content Extractor (Full Stack Mode)"
-docker-compose -f docker-compose.yml -f docker-compose.containers.yml up -d
+$DOCKER_COMPOSE_CMD -f docker-compose.yml -f docker-compose.containers.yml up -d
 echo "✅ Started! Access at: http://localhost:5000"
-echo "📊 Check status: docker-compose ps"
-echo "📋 View logs: docker-compose logs -f app"
+echo "📊 Check status: $DOCKER_COMPOSE_CMD ps"
+echo "📋 View logs: $DOCKER_COMPOSE_CMD logs -f app"
 echo "🗃️ MongoDB: localhost:27017"
 echo "🔍 ChromaDB: localhost:8000"
 STARTEOF
     chmod +x start-fullstack.sh
 
     # Stop script
-    cat > stop.sh << 'STARTEOF'
+    cat > stop.sh << STARTEOF
 #!/bin/bash
 echo "🛑 Stopping RPGer Content Extractor..."
-docker-compose down
-docker-compose -f docker-compose.dev.yml down 2>/dev/null || true
-docker-compose -f docker-compose.yml -f docker-compose.containers.yml down 2>/dev/null || true
+$DOCKER_COMPOSE_CMD down 2>/dev/null || true
+$DOCKER_COMPOSE_CMD -f docker-compose.dev.yml down 2>/dev/null || true
+$DOCKER_COMPOSE_CMD -f docker-compose.yml -f docker-compose.containers.yml down 2>/dev/null || true
 echo "✅ Stopped!"
 STARTEOF
     chmod +x stop.sh
@@ -373,8 +381,8 @@ show_completion_message() {
     echo
     echo -e "${YELLOW}📋 Other commands:${NC}"
     echo "   ./stop.sh                    # Stop all services"
-    echo "   docker-compose ps            # Check status"
-    echo "   docker-compose logs -f app   # View logs"
+    echo "   $DOCKER_COMPOSE_CMD ps            # Check status"
+    echo "   $DOCKER_COMPOSE_CMD logs -f app   # View logs"
     echo
     echo -e "${YELLOW}🌐 Access:${NC}"
     echo "   Web UI: http://localhost:5000"
