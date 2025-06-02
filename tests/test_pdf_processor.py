@@ -787,9 +787,9 @@ class TestNovelElements:
         result = processor._detect_narrative_elements(test_text)
         
         assert isinstance(result, dict)
-        assert "dialogue_count" in result
+        assert "dialogue_markers" in result
         assert "character_mentions" in result
-        assert result["dialogue_count"] >= 0
+        assert result["dialogue_markers"] >= 0
 
     def test_detect_novel_section_title(self, mock_ai_config):
         """Test novel section title detection"""
@@ -829,10 +829,32 @@ class TestMultiColumnDetection:
         """Test multi-column text processing"""
         processor = MultiGamePDFProcessor(ai_config=mock_ai_config)
         
-        # Mock blocks with text
+        # Mock blocks in PyMuPDF dict format
         mock_blocks = {
-            0: {"bbox": [50, 100, 250, 200], "text": "Left column text"},
-            1: {"bbox": [300, 100, 500, 200], "text": "Right column text"}
+            "blocks": [
+                {
+                    "type": 0,  # Text block
+                    "bbox": [50.0, 100.0, 250.0, 200.0],
+                    "lines": [
+                        {
+                            "spans": [
+                                {"text": "Left column text"}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": 0,  # Text block
+                    "bbox": [300.0, 100.0, 500.0, 200.0],
+                    "lines": [
+                        {
+                            "spans": [
+                                {"text": "Right column text"}
+                            ]
+                        }
+                    ]
+                }
+            ]
         }
         
         page_width = 600.0
@@ -841,6 +863,8 @@ class TestMultiColumnDetection:
         
         assert isinstance(result, str)
         assert len(result) > 0
+        assert "Left column text" in result
+        assert "Right column text" in result
 
 
 class TestContentCategorization:
@@ -893,14 +917,24 @@ class TestForcedMetadata:
         test_pdf = temp_dir / "test_book.pdf"
         test_pdf.write_text("Mock PDF content")
         
-        result = processor._create_forced_metadata(
-            test_pdf, 
-            force_game_type="D&D",
-            force_content_type="source_material"
-        )
+        with patch.object(processor.game_detector, 'analyze_game_metadata') as mock_detector:
+            mock_detector.return_value = {
+                'game_type': 'Unknown',
+                'edition': 'Unknown',
+                'book_type': 'Unknown',
+                'collection': 'Test Book',
+                'book_title': 'Test Book',
+                'confidence': 0.85
+            }
+            
+            result = processor._create_forced_metadata(
+                test_pdf, 
+                force_game_type="D&D",
+                force_edition=None
+            )
         
         assert isinstance(result, dict)
         assert result["game_type"] == "D&D"
-        assert result["content_type"] == "source_material"
+        # Note: content_type is handled separately in the main extract method
         assert "book_title" in result
         assert "confidence" in result
