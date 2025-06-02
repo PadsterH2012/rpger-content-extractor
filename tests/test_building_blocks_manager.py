@@ -59,8 +59,10 @@ class TestConnectionManagement:
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
             mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.__getitem__.return_value = mock_db
-            mock_db.__getitem__.return_value = mock_collection
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             manager = BuildingBlocksManager()
             
@@ -111,8 +113,8 @@ class TestBuildingBlocksStorage:
             result = manager.store_building_blocks(building_blocks, source_metadata)
             
             assert isinstance(result, dict)
-            assert "stored_count" in result
-            assert "skipped_count" in result
+            assert "blocks_stored" in result
+            assert "blocks_skipped" in result
             assert "categories" in result
 
     def test_store_empty_building_blocks(self):
@@ -129,7 +131,7 @@ class TestBuildingBlocksStorage:
             result = manager.store_building_blocks(empty_blocks, source_metadata)
             
             assert isinstance(result, dict)
-            assert result["stored_count"] == 0
+            assert result["blocks_stored"] == 0
 
     def test_store_building_blocks_with_duplicates(self):
         """Test storing building blocks with duplicates"""
@@ -155,7 +157,7 @@ class TestBuildingBlocksStorage:
             result = manager.store_building_blocks(building_blocks, source_metadata)
             
             assert isinstance(result, dict)
-            assert "skipped_count" in result
+            assert "blocks_skipped" in result
 
 
 @pytest.mark.unit
@@ -168,11 +170,16 @@ class TestBuildingBlocksRetrieval:
             mock_collection = Mock()
             mock_client.return_value.rpger.building_blocks = mock_collection
             
-            # Mock query results
-            mock_collection.find.return_value.limit.return_value = [
+            # Mock query results - make sure the entire chain works
+            test_data = [
                 {"text": "John", "category": "names", "novel_title": "Test Novel"},
                 {"text": "Mary", "category": "names", "novel_title": "Test Novel"}
             ]
+            
+            # Mock the entire find().limit() chain and make list() work
+            mock_cursor = Mock()
+            mock_cursor.__iter__ = Mock(return_value=iter(test_data))
+            mock_collection.find.return_value.limit.return_value = mock_cursor
             
             manager = BuildingBlocksManager()
             
