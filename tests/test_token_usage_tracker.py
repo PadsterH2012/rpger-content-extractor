@@ -188,7 +188,7 @@ class TestAPICallRecording:
         
         session = tracker._sessions[session_id]
         assert session.total_tokens == 600  # Sum of all tokens
-        assert session.total_cost == 0.0045  # Sum of all costs
+        assert abs(session.total_cost - 0.0045) < 1e-10  # Sum of all costs (with floating point tolerance)
         assert session.total_api_calls == 3
         assert len(session.api_calls) == 3
 

@@ -32,7 +32,7 @@ def test_refresh_integration():
         print("✅ loadMainOpenRouterModels correctly calls refreshTokenTracking on forceRefresh")
     else:
         print("❌ loadMainOpenRouterModels missing refreshTokenTracking call")
-        return False
+        assert False, "loadMainOpenRouterModels missing refreshTokenTracking call"
     
     # Test 2: Check that recalculateSessionCost calls refreshTokenTracking
     print("\n🔍 Test 2: recalculateSessionCost refresh integration")
@@ -50,7 +50,7 @@ def test_refresh_integration():
         print("✅ recalculateSessionCost correctly calls refreshTokenTracking")
     else:
         print("❌ recalculateSessionCost missing refreshTokenTracking call")
-        return False
+        assert False, "recalculateSessionCost missing refreshTokenTracking call"
     
     # Test 3: Check that loadOpenRouterModelsEnhanced calls refreshTokenTracking when forceRefresh=true
     print("\n🔍 Test 3: loadOpenRouterModelsEnhanced refresh integration")
@@ -68,7 +68,7 @@ def test_refresh_integration():
         print("✅ loadOpenRouterModelsEnhanced correctly calls refreshTokenTracking on forceRefresh")
     else:
         print("❌ loadOpenRouterModelsEnhanced missing refreshTokenTracking call")
-        return False
+        assert False, "loadOpenRouterModelsEnhanced missing refreshTokenTracking call"
     
     # Test 4: Check that original loadOpenRouterModels also has the fix
     print("\n🔍 Test 4: loadOpenRouterModels (original) refresh integration")
@@ -86,10 +86,9 @@ def test_refresh_integration():
         print("✅ loadOpenRouterModels (original) correctly calls refreshTokenTracking on forceRefresh")
     else:
         print("❌ loadOpenRouterModels (original) missing refreshTokenTracking call")
-        return False
+        assert False, "loadOpenRouterModels (original) missing refreshTokenTracking call"
     
     print("\n🎉 All refresh integration tests passed!")
-    return True
 
 
 def test_condition_logic():
@@ -115,10 +114,9 @@ def test_condition_logic():
         else:
             print("⚠️ Condition may only be in one function")
         
-        return True
     else:
         print("❌ Correct token tracking condition not found")
-        return False
+        assert False, "Correct token tracking condition not found"
 
 
 if __name__ == "__main__":

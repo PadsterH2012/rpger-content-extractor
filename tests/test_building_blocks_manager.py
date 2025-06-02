@@ -205,8 +205,22 @@ class TestBuildingBlocksRetrieval:
     def test_get_blocks_by_category(self):
         """Test getting blocks by category"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             # Mock query results
             mock_collection.find.return_value.limit.return_value = [
@@ -215,6 +229,10 @@ class TestBuildingBlocksRetrieval:
             ]
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             results = manager.get_blocks_by_category("names", limit=10)
             
@@ -225,11 +243,30 @@ class TestBuildingBlocksRetrieval:
     def test_get_blocks_by_category_with_novel_filter(self):
         """Test getting blocks by category with novel title filter"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
+            
             mock_collection.find.return_value.limit.return_value = []
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             results = manager.get_blocks_by_category("names", novel_title="Specific Novel")
             
@@ -237,21 +274,39 @@ class TestBuildingBlocksRetrieval:
             mock_collection.find.assert_called_once()
             call_args = mock_collection.find.call_args[0][0]
             assert "category" in call_args
-            assert "novel_title" in call_args
+            assert "source.novel_title" in call_args
 
     def test_get_random_blocks(self):
         """Test getting random blocks"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             # Mock aggregation pipeline results
             mock_collection.aggregate.return_value = [
-                {"text": "Random Name 1"},
-                {"text": "Random Name 2"}
+                {"block": "Random Name 1"},
+                {"block": "Random Name 2"}
             ]
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             results = manager.get_random_blocks("names", count=5)
             
@@ -261,13 +316,32 @@ class TestBuildingBlocksRetrieval:
     def test_search_blocks(self):
         """Test searching blocks by text"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
+            
             mock_collection.find.return_value.limit.return_value = [
                 {"text": "John the Wizard", "category": "names"}
             ]
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             results = manager.search_blocks("wizard")
             
@@ -275,16 +349,35 @@ class TestBuildingBlocksRetrieval:
             mock_collection.find.assert_called_once()
             # Should use text search query
             call_args = mock_collection.find.call_args[0][0]
-            assert "$text" in call_args or "text" in str(call_args)
+            assert "$regex" in str(call_args) or "block" in call_args
 
     def test_search_blocks_with_category_filter(self):
         """Test searching blocks with category filter"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
+            
             mock_collection.find.return_value.limit.return_value = []
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             results = manager.search_blocks("wizard", category="names")
             
@@ -300,18 +393,42 @@ class TestStatistics:
     def test_get_statistics(self):
         """Test getting collection statistics"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             # Mock statistics queries
-            mock_collection.count_documents.return_value = 100
-            mock_collection.aggregate.return_value = [
-                {"_id": "names", "count": 30},
-                {"_id": "places", "count": 25},
-                {"_id": "items", "count": 45}
+            mock_collection.aggregate.side_effect = [
+                [
+                    {"_id": "names", "count": 30, "novels": ["Novel1", "Novel2"]},
+                    {"_id": "places", "count": 25, "novels": ["Novel1"]},
+                    {"_id": "items", "count": 45, "novels": ["Novel1", "Novel2", "Novel3"]}
+                ],
+                [
+                    {"_id": "Novel1", "blocks": 50, "categories": ["names", "places"], "author": "Author1"},
+                    {"_id": "Novel2", "blocks": 30, "categories": ["names", "items"], "author": "Author2"},
+                    {"_id": "Novel3", "blocks": 20, "categories": ["items"], "author": "Author3"}
+                ]
             ]
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             stats = manager.get_statistics()
             
@@ -323,14 +440,31 @@ class TestStatistics:
     def test_get_statistics_empty_collection(self):
         """Test getting statistics from empty collection"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             # Mock empty collection
-            mock_collection.count_documents.return_value = 0
-            mock_collection.aggregate.return_value = []
+            mock_collection.aggregate.side_effect = [[], []]
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             stats = manager.get_statistics()
             
@@ -391,10 +525,28 @@ class TestErrorHandling:
     def test_invalid_building_blocks_data(self):
         """Test handling of invalid building blocks data"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             # Test with None
             result = manager.store_building_blocks(None, {})
@@ -468,11 +620,31 @@ class TestDataValidation:
     def test_metadata_validation(self):
         """Test source metadata validation"""
         with patch('Modules.building_blocks_manager.MongoClient') as mock_client:
+            # Setup mock client and database hierarchy
+            mock_db = Mock()
             mock_collection = Mock()
-            mock_client.return_value.rpger.building_blocks = mock_collection
+            
+            # Configure mock to properly simulate MongoDB client behavior
+            mock_client_instance = Mock()
+            mock_client.return_value = mock_client_instance
+            
+            # Configure server_info for connection test
+            mock_client_instance.server_info.return_value = {"version": "4.4.0"}
+            
+            # Configure database access: client[database_name] returns database
+            mock_client_instance.__getitem__ = Mock(return_value=mock_db)
+            
+            # Configure collection access: db[collection_name] returns collection  
+            mock_db.__getitem__ = Mock(return_value=mock_collection)
+            
+            mock_collection.update_one.return_value = Mock(upserted_id="test_id")
             mock_collection.insert_one.return_value = Mock(inserted_id="test_id")
             
             manager = BuildingBlocksManager(auto_connect=False)
+            
+            # Mock the _create_indexes method to avoid index creation during testing
+            with patch.object(manager, '_create_indexes'):
+                manager._connect()  # Explicitly call connect to set up mocked connection
             
             building_blocks = {"names": ["Test Name"]}
             

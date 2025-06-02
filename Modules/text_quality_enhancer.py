@@ -180,6 +180,12 @@ class TextQualityEnhancer:
         """
         self.logger.info(f"Enhancing text quality (aggressive={aggressive})")
 
+        # Handle None or non-string input
+        if text is None:
+            text = ""
+        if not isinstance(text, str):
+            text = str(text)
+
         # Assess original quality
         before_metrics = self._assess_text_quality(text)
 
