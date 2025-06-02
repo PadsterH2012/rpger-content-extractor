@@ -22,11 +22,11 @@ DOCKER_IMAGE="padster2012/rpger-content-extractor:latest"
 # Helper functions
 print_header() {
     echo -e "${PURPLE}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                🎮 RPGer Content Extractor                    ║"
-    echo "║                    Quick Install Script                      ║"
-    echo "║                        v1.0.44                              ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║               🎮 RPGer Content Extractor                  ║"
+    echo "║                   Quick Install Script                    ║"
+    echo "║                       v1.0.44                            ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
 
@@ -150,26 +150,28 @@ EOF
 
 show_deployment_menu() {
     echo -e "${BLUE}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                    Deployment Options                       ║"
-    echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║  1. 🚀 Production (Recommended)                             ║"
-    echo "║     • Uses pre-built Docker images (v1.0.44)               ║"
-    echo "║     • Requires external MongoDB & ChromaDB                  ║"
-    echo "║     • Fastest startup, minimal resources                    ║"
-    echo "║                                                              ║"
-    echo "║  2. 🛠️  Development                                         ║"
-    echo "║     • Builds from source with live reloading               ║"
-    echo "║     • Requires external MongoDB & ChromaDB                  ║"
-    echo "║     • For code development and testing                      ║"
-    echo "║                                                              ║"
-    echo "║  3. 🗄️  Full Stack                                          ║"
-    echo "║     • Includes MongoDB & ChromaDB containers               ║"
-    echo "║     • Self-contained, no external dependencies             ║"
-    echo "║     • Higher resource usage (~2GB RAM)                     ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║                   Deployment Options                      ║"
+    echo "╠════════════════════════════════════════════════════════════╣"
+    echo "║                                                            ║"
+    echo "║  1. 🚀 Production (Recommended)                           ║"
+    echo "║     • Uses pre-built Docker images (v1.0.44)             ║"
+    echo "║     • Requires external MongoDB & ChromaDB                ║"
+    echo "║     • Fastest startup, minimal resources                  ║"
+    echo "║                                                            ║"
+    echo "║  2. 🛠️  Development                                       ║"
+    echo "║     • Builds from source with live reloading             ║"
+    echo "║     • Requires external MongoDB & ChromaDB                ║"
+    echo "║     • For code development and testing                    ║"
+    echo "║                                                            ║"
+    echo "║  3. 🗄️  Full Stack                                        ║"
+    echo "║     • Includes MongoDB & ChromaDB containers             ║"
+    echo "║     • Self-contained, no external dependencies           ║"
+    echo "║     • Higher resource usage (~2GB RAM)                   ║"
+    echo "║                                                            ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    
+
     while true; do
         read -p "Select deployment option (1-3): " choice
         case $choice in
@@ -238,9 +240,9 @@ ENVEOF
 
 configure_external_databases() {
     echo -e "${YELLOW}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                External Database Configuration               ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║              External Database Configuration               ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 
     # MongoDB Configuration
@@ -264,10 +266,10 @@ configure_external_databases() {
 
 configure_api_keys() {
     echo -e "${YELLOW}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                   AI Provider API Keys                      ║"
-    echo "║                      (Optional)                             ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║                 AI Provider API Keys                      ║"
+    echo "║                     (Optional)                            ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 
     read -p "Do you want to configure AI API keys now? (y/N): " -n 1 -r
@@ -353,9 +355,9 @@ STARTEOF
 
 show_completion_message() {
     echo -e "${GREEN}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                🎉 Installation Complete! 🎉                 ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║               🎉 Installation Complete! 🎉                ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 
     echo -e "${CYAN}📁 Installation Directory:${NC} $(pwd)"
