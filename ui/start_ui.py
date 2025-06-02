@@ -71,12 +71,25 @@ def check_environment():
     print("ℹ️  ChromaDB connection will be tested when UI starts")
     print("ℹ️  MongoDB connection will be tested when UI starts")
 
+def import_version():
+    """Import version information with fallback handling"""
+    parent_dir = Path(__file__).parent.parent
+    sys.path.append(str(parent_dir))
+    
+    try:
+        from version import __version__, __build_date__, __environment__
+        return __version__, __build_date__, __environment__
+    except ImportError:
+        # Fallback for CI/CD environments
+        return "3.1.0", "unknown", "development"
+
 def main():
     """Main startup function"""
     # Get version information
-    current_dir = Path.cwd()
-    sys.path.append(str(current_dir))
-    from version import __version__, __build_date__, __environment__
+    __version__, __build_date__, __environment__ = import_version()
+    
+    # Get parent directory for file system operations
+    parent_dir = Path(__file__).parent.parent
     
     print(f"🚀 Starting AI-Powered Extraction v3 Web UI - Version {__version__}")
     print(f"📅 Build Date: {__build_date__}")
@@ -84,7 +97,7 @@ def main():
     print("=" * 50)
 
     # Check if we're in the right directory
-    if not (current_dir / "ui" / "app.py").exists():
+    if not (parent_dir / "ui" / "app.py").exists():
         print("❌ Please run this script from the extractor directory:")
         print("   cd extractor")
         print("   python ui/start_ui.py")
@@ -114,7 +127,7 @@ def main():
     print("=" * 50)
 
     # Change to UI directory and start Flask
-    ui_dir = current_dir / "ui"
+    ui_dir = parent_dir / "ui"
     os.chdir(ui_dir)
 
     try:
