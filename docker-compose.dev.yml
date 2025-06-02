@@ -2,19 +2,20 @@ version: '3.8'
 
 services:
   app:
-    # Use pre-built Docker image from Jenkins CI/CD pipeline
-    # Alternative: build: . (for local development)
-    image: padster2012/rpger-content-extractor:latest
+    # Build from source for local development
+    build: .
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - MAX_CONTENT_LENGTH=200
       - UPLOAD_TIMEOUT=300
     volumes:
       - ./uploads:/app/uploads
       - ./extracted:/app/extracted
       - ./logs:/app/logs
+      # Mount source code for live reloading during development
+      - .:/app
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
