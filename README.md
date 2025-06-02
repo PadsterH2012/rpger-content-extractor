@@ -6,12 +6,26 @@ A dockerized solution for extracting, categorizing, and managing RPG content fro
 
 ## 🚀 Quick Start
 
-### ⚡ One-Line Install (Recommended)
-Interactive installer with guided setup
+### ⚡ Quick Install
 
+#### 🚀 **One-Line Install (Auto-mode)**
 ```bash
-# Install RPGer Content Extractor
+# Automatic installation with Production defaults
 curl -sSL https://raw.githubusercontent.com/PadsterH2012/rpger-content-extractor/main/install.sh | bash
+
+# Navigate to installation directory
+cd rpger-extractor
+
+# Start production mode
+./start-production.sh
+```
+
+#### 🎯 **Interactive Install (Full Setup)**
+```bash
+# Download and run for interactive configuration
+wget https://raw.githubusercontent.com/PadsterH2012/rpger-content-extractor/main/install.sh
+chmod +x install.sh
+./install.sh
 
 # Navigate to installation directory
 cd rpger-extractor
@@ -25,8 +39,8 @@ cd rpger-extractor
 ./stop.sh
 
 # Check status and logs
-docker-compose ps
-docker-compose logs -f app
+docker compose ps
+docker compose logs -f app
 ```
 
 **Installer Features:**
@@ -183,6 +197,7 @@ rpger-extractor/
 - **Backup Creation**: Automatically backs up existing configuration
 - **Error Handling**: Graceful failure with helpful error messages
 - **Version Compatibility**: Automatically detects and uses correct Docker Compose command
+- **Interactive Input**: Properly handles user input when piped through curl
 
 ---
 

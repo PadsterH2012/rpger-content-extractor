@@ -77,11 +77,15 @@ create_install_directory() {
     
     if [ -d "$INSTALL_DIR" ]; then
         print_warning "Directory '$INSTALL_DIR' already exists"
-        read -p "Do you want to continue? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_error "Installation cancelled"
-            exit 1
+        if [ ! -t 0 ]; then
+            print_warning "Running in pipe mode - continuing with existing directory"
+        else
+            read -p "Do you want to continue? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Installation cancelled"
+                exit 1
+            fi
         fi
     else
         mkdir -p "$INSTALL_DIR"
@@ -172,6 +176,17 @@ show_deployment_menu() {
     echo "╚════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 
+    # Check if we're running in a pipe (no tty available)
+    if [ ! -t 0 ]; then
+        print_warning "Running in pipe mode - using default Production deployment"
+        print_warning "For interactive setup, download and run the script directly:"
+        print_warning "  wget https://raw.githubusercontent.com/PadsterH2012/rpger-content-extractor/main/install.sh"
+        print_warning "  chmod +x install.sh"
+        print_warning "  ./install.sh"
+        DEPLOYMENT_MODE="production"
+        return
+    fi
+
     while true; do
         read -p "Select deployment option (1-3): " choice
         case $choice in
@@ -189,6 +204,11 @@ configure_environment() {
     # Check if .env already exists
     if [ -f ".env" ]; then
         print_warning ".env file already exists"
+        if [ ! -t 0 ]; then
+            print_warning "Running in pipe mode - keeping existing .env file"
+            print_success "Keeping existing .env file"
+            return
+        fi
         read -p "Do you want to reconfigure it? (y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -239,6 +259,12 @@ ENVEOF
 }
 
 configure_external_databases() {
+    if [ ! -t 0 ]; then
+        print_warning "Running in pipe mode - skipping database configuration"
+        print_warning "Edit .env file manually to configure database URLs"
+        return
+    fi
+
     echo -e "${YELLOW}"
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║              External Database Configuration               ║"
@@ -265,6 +291,12 @@ configure_external_databases() {
 }
 
 configure_api_keys() {
+    if [ ! -t 0 ]; then
+        print_warning "Running in pipe mode - skipping API key configuration"
+        print_warning "Edit .env file manually to add API keys"
+        return
+    fi
+
     echo -e "${YELLOW}"
     echo "╔════════════════════════════════════════════════════════════╗"
     echo "║                 AI Provider API Keys                      ║"
@@ -276,21 +308,21 @@ configure_api_keys() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${CYAN}Anthropic Claude API Key:${NC}"
-        read -s -p "Enter key (or press Enter to skip): " anthropic_key
+        read -s -p "Enter key (or press Enter to skip): " anthropic_key </dev/tty
         echo
         if [ -n "$anthropic_key" ]; then
             sed -i "s|ANTHROPIC_API_KEY=|ANTHROPIC_API_KEY=$anthropic_key|" .env
         fi
 
         echo -e "${CYAN}OpenAI API Key:${NC}"
-        read -s -p "Enter key (or press Enter to skip): " openai_key
+        read -s -p "Enter key (or press Enter to skip): " openai_key </dev/tty
         echo
         if [ -n "$openai_key" ]; then
             sed -i "s|OPENAI_API_KEY=|OPENAI_API_KEY=$openai_key|" .env
         fi
 
         echo -e "${CYAN}OpenRouter API Key:${NC}"
-        read -s -p "Enter key (or press Enter to skip): " openrouter_key
+        read -s -p "Enter key (or press Enter to skip): " openrouter_key </dev/tty
         echo
         if [ -n "$openrouter_key" ]; then
             sed -i "s|OPENROUTER_API_KEY=|OPENROUTER_API_KEY=$openrouter_key|" .env
