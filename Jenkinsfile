@@ -331,7 +331,7 @@ pipeline {
                             // Publish test results
                             script {
                                 try {
-                                    publishTestResults testResultsPattern: 'test-reports/integration-tests.xml'
+                                    junit testResultsPattern: 'test-reports/integration-tests.xml'
                                 } catch (Exception e) {
                                     echo "⚠️ Warning: Could not publish integration test results: ${e.getMessage()}"
                                 }
@@ -398,7 +398,7 @@ pipeline {
                     // Publish test results
                     script {
                         try {
-                            publishTestResults testResultsPattern: 'test-reports/e2e-tests.xml'
+                            junit testResultsPattern: 'test-reports/e2e-tests.xml'
                         } catch (Exception e) {
                             echo "⚠️ Warning: Could not publish E2E test results: ${e.getMessage()}"
                         }
