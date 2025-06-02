@@ -25,7 +25,30 @@ from Modules.pdf_processor import MultiGamePDFProcessor
 from Modules.multi_collection_manager import MultiGameCollectionManager
 from Modules.mongodb_manager import MongoDBManager
 from Modules.openrouter_models import openrouter_models
-from version import __version__, __build_date__, __commit_hash__, __branch__, __environment__, get_version_info
+
+# Robust version import with fallback for CI/CD environments
+def import_version_info():
+    """Import version information with fallback handling"""
+    try:
+        # Try to import from project root
+        parent_dir = Path(__file__).parent.parent
+        sys.path.append(str(parent_dir))
+        from version import __version__, __build_date__, __commit_hash__, __branch__, __environment__, get_version_info
+        return __version__, __build_date__, __commit_hash__, __branch__, __environment__, get_version_info
+    except ImportError:
+        # Fallback for CI/CD environments
+        def fallback_get_version_info():
+            return {
+                'version': '3.1.0',
+                'build_date': 'unknown',
+                'commit_hash': 'unknown',
+                'branch': 'main',
+                'environment': 'test'
+            }
+        return '3.1.0', 'unknown', 'unknown', 'main', 'test', fallback_get_version_info
+
+# Import version information
+__version__, __build_date__, __commit_hash__, __branch__, __environment__, get_version_info = import_version_info()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24))

@@ -367,7 +367,7 @@ pipeline {
                     # Start Flask application in background for E2E tests
                     echo "🚀 Starting Flask application for E2E testing..."
                     cd ui
-                    python start_ui.py &
+                    ../venv/bin/python start_ui.py &
                     FLASK_PID=$!
                     cd ..
 
