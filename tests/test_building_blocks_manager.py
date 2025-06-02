@@ -92,7 +92,7 @@ class TestConnectionManagement:
             
             # Should handle gracefully
             try:
-                manager = BuildingBlocksManager()
+                manager = BuildingBlocksManager(auto_connect=False)
                 # If no exception, the error was handled
             except Exception:
                 # Connection error handling may vary
@@ -161,7 +161,7 @@ class TestBuildingBlocksStorage:
             mock_collection = Mock()
             mock_client.return_value.rpger.building_blocks = mock_collection
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             empty_blocks = {}
             source_metadata = {"novel_title": "Empty Novel"}
@@ -169,7 +169,7 @@ class TestBuildingBlocksStorage:
             result = manager.store_building_blocks(empty_blocks, source_metadata)
             
             assert isinstance(result, dict)
-            assert result["stored_count"] == 0
+            assert result["blocks_stored"] == 0
 
     def test_store_building_blocks_with_duplicates(self):
         """Test storing building blocks with duplicates"""
@@ -185,7 +185,7 @@ class TestBuildingBlocksStorage:
                 Mock(inserted_id="id3")   # Success
             ]
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             building_blocks = {
                 "names": ["John", "Mary", "Bob"]
@@ -195,7 +195,7 @@ class TestBuildingBlocksStorage:
             result = manager.store_building_blocks(building_blocks, source_metadata)
             
             assert isinstance(result, dict)
-            assert "skipped_count" in result
+            assert "blocks_skipped" in result
 
 
 @pytest.mark.unit
@@ -214,7 +214,7 @@ class TestBuildingBlocksRetrieval:
                 {"text": "Mary", "category": "names", "novel_title": "Test Novel"}
             ]
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             results = manager.get_blocks_by_category("names", limit=10)
             
@@ -229,7 +229,7 @@ class TestBuildingBlocksRetrieval:
             mock_client.return_value.rpger.building_blocks = mock_collection
             mock_collection.find.return_value.limit.return_value = []
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             results = manager.get_blocks_by_category("names", novel_title="Specific Novel")
             
@@ -251,7 +251,7 @@ class TestBuildingBlocksRetrieval:
                 {"text": "Random Name 2"}
             ]
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             results = manager.get_random_blocks("names", count=5)
             
@@ -267,7 +267,7 @@ class TestBuildingBlocksRetrieval:
                 {"text": "John the Wizard", "category": "names"}
             ]
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             results = manager.search_blocks("wizard")
             
@@ -284,7 +284,7 @@ class TestBuildingBlocksRetrieval:
             mock_client.return_value.rpger.building_blocks = mock_collection
             mock_collection.find.return_value.limit.return_value = []
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             results = manager.search_blocks("wizard", category="names")
             
@@ -311,7 +311,7 @@ class TestStatistics:
                 {"_id": "items", "count": 45}
             ]
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             stats = manager.get_statistics()
             
@@ -330,7 +330,7 @@ class TestStatistics:
             mock_collection.count_documents.return_value = 0
             mock_collection.aggregate.return_value = []
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             stats = manager.get_statistics()
             
@@ -348,7 +348,7 @@ class TestIndexManagement:
             mock_collection = Mock()
             mock_client.return_value.rpger.building_blocks = mock_collection
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             # Should attempt to create indexes during initialization
             # (Implementation may call create_index or similar)
@@ -365,7 +365,7 @@ class TestIndexManagement:
             
             # Should handle gracefully
             try:
-                manager = BuildingBlocksManager()
+                manager = BuildingBlocksManager(auto_connect=False)
                 # If initialization completes, error was handled
             except Exception:
                 # Error handling may vary
@@ -383,7 +383,7 @@ class TestErrorHandling:
             
             # Should handle gracefully or raise appropriate error
             try:
-                manager = BuildingBlocksManager()
+                manager = BuildingBlocksManager(auto_connect=False)
             except Exception as e:
                 # Expected for connection failures
                 assert "MongoDB" in str(e) or "Connection" in str(e) or True
@@ -394,7 +394,7 @@ class TestErrorHandling:
             mock_collection = Mock()
             mock_client.return_value.rpger.building_blocks = mock_collection
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             # Test with None
             result = manager.store_building_blocks(None, {})
@@ -413,7 +413,7 @@ class TestErrorHandling:
             # Simulate database errors
             mock_collection.find.side_effect = Exception("Database error")
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             # Should handle gracefully
             try:
@@ -436,7 +436,7 @@ class TestDataValidation:
             mock_client.return_value.rpger.building_blocks = mock_collection
             mock_collection.insert_one.return_value = Mock(inserted_id="test_id")
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             # Test with valid categories
             valid_blocks = {
@@ -454,7 +454,7 @@ class TestDataValidation:
             mock_client.return_value.rpger.building_blocks = mock_collection
             mock_collection.insert_one.return_value = Mock(inserted_id="test_id")
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             # Test with empty strings (should be filtered out)
             blocks_with_empty = {
@@ -472,7 +472,7 @@ class TestDataValidation:
             mock_client.return_value.rpger.building_blocks = mock_collection
             mock_collection.insert_one.return_value = Mock(inserted_id="test_id")
             
-            manager = BuildingBlocksManager()
+            manager = BuildingBlocksManager(auto_connect=False)
             
             building_blocks = {"names": ["Test Name"]}
             
