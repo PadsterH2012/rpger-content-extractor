@@ -45,7 +45,7 @@ class TestInfrastructure:
             try:
                 from Modules.mongodb_manager import MongoDBManager
                 # Test that the class can be instantiated without connecting
-                manager = MongoDBManager(debug=False)
+                manager = MongoDBManager(debug=False, auto_connect=False)
                 assert manager is not None
             finally:
                 # Restore original environment
