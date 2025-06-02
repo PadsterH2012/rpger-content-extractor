@@ -15,7 +15,7 @@ class BuildingBlocksManager:
     """Manages building blocks in a dedicated MongoDB collection"""
 
     def __init__(self, mongo_host: str = "10.202.28.46", mongo_port: int = 27017,
-                 database: str = "rpger", collection: str = "building_blocks"):
+                 database: str = "rpger", collection: str = "building_blocks", auto_connect: bool = True):
         self.mongo_host = mongo_host
         self.mongo_port = mongo_port
         self.database_name = database
@@ -26,7 +26,10 @@ class BuildingBlocksManager:
         self.client = None
         self.db = None
         self.collection = None
-        self._connect()
+        
+        # Only auto-connect if requested (allows tests to instantiate without connecting)
+        if auto_connect:
+            self._connect()
 
     def _connect(self):
         """Connect to MongoDB and set up collection"""

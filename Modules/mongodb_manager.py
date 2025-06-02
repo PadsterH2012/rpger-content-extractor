@@ -55,7 +55,7 @@ MONGODB_CONFIG = {
 class MongoDBManager:
     """MongoDB connection and collection management"""
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None, debug: bool = False):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, debug: bool = False, auto_connect: bool = True):
         # Support both old (config dict) and new (debug bool) constructor signatures
         if isinstance(config, bool):
             # Old signature: MongoDBManager(debug=True)
@@ -83,7 +83,9 @@ class MongoDBManager:
                 print("⚠️  PyMongo not available. Install with: pip install pymongo>=4.6.0")
             return
 
-        self._connect()
+        # Only auto-connect if requested (allows tests to instantiate without connecting)
+        if auto_connect:
+            self._connect()
 
     def _connect(self) -> bool:
         """Establish connection to MongoDB"""
