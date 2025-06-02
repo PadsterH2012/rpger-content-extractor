@@ -346,39 +346,26 @@ pipeline {
             steps {
                 script {
                     echo "🌐 Running end-to-end tests..."
-                    echo "✅ Flask startup issues resolved - E2E tests re-enabled"
+                    echo "ℹ️ Current E2E tests are extraction workflow tests (no Flask required)"
+                    echo "ℹ️ Future: When adding web UI E2E tests, Flask startup will be needed"
                 }
 
                 sh '''
-                    echo "🌐 Running E2E tests with Flask application..."
+                    echo "🌐 Running E2E extraction workflow tests..."
                     . venv/bin/activate
 
                     # Create test directories
-                    mkdir -p test-reports logs
+                    mkdir -p test-reports
 
                     # Set environment variables for E2E tests
-                    export FLASK_SECRET_KEY="test_secret_key_for_ci"
                     export AI_PROVIDER="mock"
                     export MONGODB_HOST="localhost"
-                    export MONGODB_PORT="27017"
+                    export MONGODB_PORT="27017" 
                     export CHROMADB_HOST="localhost"
                     export CHROMADB_PORT="8000"
 
-                    # Start Flask application in background for E2E tests
-                    echo "🚀 Starting Flask application for E2E testing..."
-                    cd ui
-                    ../venv/bin/python start_ui.py &
-                    FLASK_PID=$!
-                    cd ..
-
-                    # Wait for Flask to start with health check
-                    echo "⏳ Waiting for Flask application to be ready..."
-                    timeout 60 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; done' || {
-                        echo "⚠️ Flask health check timeout, but continuing with E2E tests"
-                        echo "E2E tests will handle Flask startup validation"
-                    }
-
-                    # Run E2E tests
+                    # Run E2E tests (extraction workflow tests - no Flask needed)
+                    echo "🧪 Running E2E extraction workflow tests..."
                     pytest tests/ \
                         --verbose --tb=short \
                         --html=test-reports/e2e-tests.html \
@@ -389,14 +376,9 @@ pipeline {
                         --timeout=600 \
                         --cov-fail-under=0 || {
                             echo "⚠️ Some E2E tests failed, but continuing pipeline"
-                            echo "E2E test failures are non-blocking for deployment"
+                            echo "E2E test failures are non-blocking for deployment"  
                             echo "Primary validation: Unit tests maintain 100% success rate"
                         }
-
-                    # Stop Flask application
-                    echo "🛑 Stopping Flask application..."
-                    kill $FLASK_PID 2>/dev/null || true
-                    sleep 2
 
                     echo "✅ E2E test stage completed"
                 '''
