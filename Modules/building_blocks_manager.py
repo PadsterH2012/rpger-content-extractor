@@ -78,6 +78,17 @@ class BuildingBlocksManager:
     def store_building_blocks(self, building_blocks: Dict[str, Any], source_metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Store building blocks from novel extraction in the dedicated collection"""
 
+        # Handle None inputs gracefully
+        if building_blocks is None:
+            building_blocks = {}
+        if source_metadata is None:
+            source_metadata = {}
+        
+        # Handle non-dict building_blocks gracefully
+        if not isinstance(building_blocks, dict):
+            self.logger.warning(f"⚠️ Invalid building_blocks type: {type(building_blocks)}. Expected dict.")
+            building_blocks = {}
+
         novel_title = source_metadata.get("book_title", "Unknown Novel")
         author = source_metadata.get("author", "Unknown Author")
         extraction_id = source_metadata.get("extraction_id", None)
