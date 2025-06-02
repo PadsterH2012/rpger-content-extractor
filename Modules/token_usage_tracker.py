@@ -49,13 +49,22 @@ class TokenUsageTracker:
                 start_time=datetime.now().isoformat()
             )
             self.logger.info(f"📊 Started token tracking for session: {session_id[:8]}")
-    
-    def record_api_call(self, session_id: str, provider: str, model: str, 
+
+    def _create_session_if_needed(self, session_id: str) -> None:
+        """Internal method to create session without acquiring lock (lock must be held)"""
+        if session_id not in self._sessions:
+            self._sessions[session_id] = SessionUsage(
+                session_id=session_id,
+                start_time=datetime.now().isoformat()
+            )
+            self.logger.info(f"📊 Started token tracking for session: {session_id[:8]}")
+
+    def record_api_call(self, session_id: str, provider: str, model: str,
                        operation: str, prompt_tokens: int, completion_tokens: int,
                        cost: float = 0.0) -> None:
         """Record an API call with token usage"""
         total_tokens = prompt_tokens + completion_tokens
-        
+
         record = APICallRecord(
             timestamp=datetime.now().isoformat(),
             provider=provider,
@@ -67,17 +76,17 @@ class TokenUsageTracker:
             cost=cost,
             session_id=session_id
         )
-        
+
         with self._lock:
-            if session_id not in self._sessions:
-                self.start_session(session_id)
-            
+            # Use internal method to avoid deadlock
+            self._create_session_if_needed(session_id)
+
             session = self._sessions[session_id]
             session.api_calls.append(record)
             session.total_tokens += total_tokens
             session.total_cost += cost
             session.total_api_calls += 1
-            
+
             self.logger.info(f"📊 API call recorded - {provider}/{model}: {total_tokens} tokens (prompt: {prompt_tokens}, completion: {completion_tokens})")
             self.logger.info(f"📊 Session {session_id[:8]} totals: {session.total_api_calls} calls, {session.total_tokens} tokens, ${session.total_cost:.4f}")
     
