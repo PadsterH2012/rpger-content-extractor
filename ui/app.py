@@ -28,7 +28,7 @@ from Modules.openrouter_models import openrouter_models
 from version import __version__, __build_date__, __commit_hash__, __branch__, __environment__, get_version_info
 
 app = Flask(__name__)
-app.secret_key = 'extraction_v3_ui_secret_key_change_in_production'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24))
 app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200MB max file size
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching
 app.config['UPLOAD_TIMEOUT'] = 300  # 5 minutes for upload timeout
