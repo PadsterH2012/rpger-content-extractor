@@ -1551,17 +1551,42 @@ def save_settings():
         env_path = Path(__file__).parent.parent / '.env'
         env_sample_path = Path(__file__).parent.parent / '.env.sample'
 
+        # Check if parent directory is writable
+        parent_dir = env_path.parent
+        if not os.access(parent_dir, os.W_OK):
+            logger.error(f"Directory not writable: {parent_dir}")
+            return jsonify({'error': f'Directory not writable: {parent_dir}. Check Docker volume permissions.'}), 500
+
         # If .env doesn't exist, copy from .env.sample
         if not env_path.exists() and env_sample_path.exists():
-            shutil.copy2(env_sample_path, env_path)
-            logger.info("Created .env file from .env.sample")
+            try:
+                shutil.copy2(env_sample_path, env_path)
+                logger.info("Created .env file from .env.sample")
+            except PermissionError:
+                logger.error(f"Permission denied creating .env file: {env_path}")
+                return jsonify({'error': 'Permission denied creating .env file. Check Docker volume permissions.'}), 500
+            except Exception as copy_error:
+                logger.error(f"Failed to copy .env.sample: {copy_error}")
+                return jsonify({'error': f'Failed to create .env file: {copy_error}'}), 500
+
+        # Check if .env file is writable (if it exists)
+        if env_path.exists() and not os.access(env_path, os.W_OK):
+            logger.error(f".env file not writable: {env_path}")
+            return jsonify({'error': f'.env file not writable: {env_path}. Check file permissions.'}), 500
 
         # Read existing settings
-        if env_path.exists():
-            with open(env_path, 'r') as f:
-                lines = f.readlines()
-        else:
-            lines = []
+        try:
+            if env_path.exists():
+                with open(env_path, 'r') as f:
+                    lines = f.readlines()
+            else:
+                lines = []
+        except PermissionError:
+            logger.error(f"Permission denied reading .env file: {env_path}")
+            return jsonify({'error': 'Permission denied reading .env file.'}), 500
+        except Exception as read_error:
+            logger.error(f"Failed to read .env file: {read_error}")
+            return jsonify({'error': f'Failed to read .env file: {read_error}'}), 500
 
         # Parse existing lines
         updated_lines = []
@@ -1573,7 +1598,7 @@ def save_settings():
                 key = stripped.split('=', 1)[0].strip()
                 if key in new_settings:
                     # Update existing setting
-                    value = new_settings[key]
+                    value = str(new_settings[key])  # Ensure value is a string
                     # Add quotes if value contains spaces or special characters
                     if ' ' in value or any(char in value for char in ['$', '&', '|', ';']):
                         value = f'"{value}"'
@@ -1589,14 +1614,22 @@ def save_settings():
         # Add new settings that weren't in the file
         for key, value in new_settings.items():
             if key not in updated_keys and value:  # Only add non-empty values
+                value = str(value)  # Ensure value is a string
                 # Add quotes if value contains spaces or special characters
                 if ' ' in value or any(char in value for char in ['$', '&', '|', ';']):
                     value = f'"{value}"'
                 updated_lines.append(f"{key}={value}\n")
 
         # Write updated .env file
-        with open(env_path, 'w') as f:
-            f.writelines(updated_lines)
+        try:
+            with open(env_path, 'w') as f:
+                f.writelines(updated_lines)
+        except PermissionError:
+            logger.error(f"Permission denied writing to .env file: {env_path}")
+            return jsonify({'error': 'Permission denied writing to .env file. Check file permissions.'}), 500
+        except Exception as write_error:
+            logger.error(f"Failed to write .env file: {write_error}")
+            return jsonify({'error': f'Failed to write .env file: {write_error}'}), 500
 
         logger.info("Settings saved to .env file")
 
