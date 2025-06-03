@@ -492,6 +492,9 @@ function displayFileInfo(fileData) {
 function showAnalysisCard() {
     document.getElementById('analysis-card').style.display = 'block';
     document.getElementById('analysis-card').scrollIntoView({ behavior: 'smooth' });
+    
+    // Fetch and display AI usage information for analysis
+    fetchAIUsageInfo('analysis');
 }
 
 // Handle main AI provider change
@@ -515,6 +518,14 @@ function onMainProviderChange() {
 
     // Update system status to reflect new provider
     checkStatus();
+    
+    // Refresh AI usage information if cards are visible
+    if (document.getElementById('analysis-card').style.display !== 'none') {
+        fetchAIUsageInfo('analysis');
+    }
+    if (document.getElementById('extraction-card').style.display !== 'none') {
+        fetchAIUsageInfo('extraction');
+    }
 }
 
 // Handle AI provider change (legacy compatibility)
@@ -781,6 +792,14 @@ function populateMainModelDropdown(models, recommended = []) {
 
         // Recalculate session cost when model changes
         recalculateSessionCost();
+        
+        // Refresh AI usage information if cards are visible
+        if (document.getElementById('analysis-card').style.display !== 'none') {
+            fetchAIUsageInfo('analysis');
+        }
+        if (document.getElementById('extraction-card').style.display !== 'none') {
+            fetchAIUsageInfo('extraction');
+        }
     });
 }
 
@@ -930,6 +949,110 @@ function refreshTokenTracking() {
     });
 }
 
+// Fetch and display AI usage information
+function fetchAIUsageInfo(step, fileId = null) {
+    const aiProvider = document.getElementById('main-ai-provider')?.value || 'mock';
+    const aiModel = document.getElementById('main-ai-model')?.value || '';
+    const contentType = document.getElementById('content-type')?.value || 'source_material';
+    
+    const params = new URLSearchParams({
+        step: step,
+        ai_provider: aiProvider,
+        content_type: contentType
+    });
+    
+    if (aiModel) {
+        params.append('ai_model', aiModel);
+    }
+    if (fileId) {
+        params.append('file_id', fileId);
+    }
+    
+    fetch(`/api/processing/plan?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.ai_usage) {
+                displayAIUsageInfo(step, data.ai_usage);
+            }
+        })
+        .catch(error => {
+            console.error('Failed to fetch AI usage info:', error);
+        });
+}
+
+// Display AI usage information in the UI
+function displayAIUsageInfo(step, usageInfo) {
+    const prefix = step === 'analysis' ? 'analysis' : 'extraction';
+    const infoElement = document.getElementById(`${prefix}-ai-info`);
+    
+    if (infoElement) {
+        // Update the content
+        document.getElementById(`${prefix}-provider`).textContent = usageInfo.provider || 'Unknown';
+        document.getElementById(`${prefix}-model`).textContent = usageInfo.model || 'Unknown';
+        document.getElementById(`${prefix}-purpose`).textContent = usageInfo.purpose || 'Processing';
+        document.getElementById(`${prefix}-tokens`).textContent = usageInfo.estimated_tokens ? 
+            `~${usageInfo.estimated_tokens.toLocaleString()}` : '-';
+        
+        // Style based on fallback mode
+        if (usageInfo.fallback_mode) {
+            infoElement.className = 'alert alert-warning';
+            infoElement.querySelector('h6').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Processing Mode';
+        } else {
+            infoElement.className = 'alert alert-info';
+            infoElement.querySelector('h6').innerHTML = '<i class="fas fa-robot"></i> Planned AI Usage';
+        }
+        
+        // Show the info box
+        infoElement.style.display = 'block';
+    }
+}
+
+// Update analysis results to include AI usage summary
+function displayAnalysisResults(analysis, confidence, aiUsage = null) {
+    const resultsDiv = document.getElementById('analysis-results');
+    const detailsDiv = document.getElementById('analysis-details');
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Game Type:</strong> ${analysis.game_type || 'Unknown'}<br>
+                <strong>Edition:</strong> ${analysis.edition || 'Unknown'}<br>
+                <strong>Book Type:</strong> ${analysis.book_type || 'Unknown'}<br>
+                <strong>Publisher:</strong> ${analysis.publisher || 'Unknown'}
+            </div>
+            <div class="col-md-6">
+                <strong>Content Type:</strong> ${analysis.content_type || 'Unknown'}<br>
+                <strong>Confidence:</strong> ${analysis.confidence ? (analysis.confidence * 100).toFixed(1) + '%' : 'Unknown'}<br>
+                <strong>Language:</strong> ${analysis.language || 'Unknown'}<br>
+                <strong>Pages:</strong> ${analysis.page_count || 'Unknown'}
+            </div>
+        </div>
+    `;
+    
+    // Add AI usage summary if available
+    if (aiUsage) {
+        html += `
+        <div class="mt-3 p-3 bg-light rounded">
+            <h6><i class="fas fa-chart-line"></i> AI Usage Summary</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <small><strong>Model Used:</strong> ${aiUsage.model_used || 'Unknown'}</small><br>
+                    <small><strong>Provider:</strong> ${aiUsage.provider || 'Unknown'}</small>
+                </div>
+                <div class="col-md-6">
+                    <small><strong>Tokens Consumed:</strong> ${aiUsage.tokens_consumed ? aiUsage.tokens_consumed.toLocaleString() : 'Unknown'}</small><br>
+                    <small><strong>Processing Time:</strong> ${aiUsage.processing_time ? aiUsage.processing_time.toFixed(1) + 's' : 'Unknown'}</small>
+                </div>
+            </div>
+            ${aiUsage.fallback_used ? '<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Fallback mode was used (no AI processing)</small>' : ''}
+        </div>
+        `;
+    }
+    
+    detailsDiv.innerHTML = html;
+    resultsDiv.style.display = 'block';
+}
+
 // Analyze PDF with AI
 function analyzePDF() {
     if (!currentFile) {
@@ -955,6 +1078,9 @@ function analyzePDF() {
         // Update hidden input for compatibility
         document.getElementById('ai-model').value = selectedModel;
     }
+
+    // Fetch and display AI usage information before starting
+    fetchAIUsageInfo('analysis');
 
     document.getElementById('analyze-btn').disabled = true;
     document.getElementById('analysis-progress').style.display = 'block';
@@ -988,7 +1114,8 @@ function analyzePDF() {
 
         if (data.success) {
             currentSessionId = data.session_id;
-            displayAnalysisResults(data.analysis, data.confidence);
+            // Pass AI usage information to the display function
+            displayAnalysisResults(data.analysis, data.confidence, data.ai_usage);
             updateProgress('analyze', 'completed');
             showExtractionCard();
             showToast('Analysis completed successfully', 'success');
@@ -1009,6 +1136,9 @@ function analyzePDF() {
             }
 
             updateSessionTracking();
+            
+            // Fetch and display extraction AI usage info
+            fetchAIUsageInfo('extraction');
         } else {
             showToast(data.error || 'Analysis failed', 'error');
         }
@@ -1079,6 +1209,9 @@ function displayAnalysisResults(analysis, confidence) {
 function showExtractionCard() {
     document.getElementById('extraction-card').style.display = 'block';
     document.getElementById('extraction-card').scrollIntoView({ behavior: 'smooth' });
+    
+    // Fetch and display AI usage information for extraction
+    fetchAIUsageInfo('extraction');
 }
 
 // Extract content from PDF
@@ -1318,6 +1451,29 @@ function displayExtractionResults(data) {
     // Add category distribution
     if (summary.category_distribution) {
         resultsHtml += generateCategoryDistribution(summary.category_distribution);
+    }
+
+    // Add AI usage summary if available
+    if (data.ai_usage) {
+        const aiUsage = data.ai_usage;
+        resultsHtml += `
+        <div class="mt-3 p-3 bg-light rounded">
+            <h6><i class="fas fa-chart-line"></i> AI Usage Summary</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <small><strong>Model Used:</strong> ${aiUsage.model_used || 'Unknown'}</small><br>
+                    <small><strong>Provider:</strong> ${aiUsage.provider || 'Unknown'}</small><br>
+                    <small><strong>API Calls:</strong> ${aiUsage.api_calls || 0}</small>
+                </div>
+                <div class="col-md-6">
+                    <small><strong>Tokens Consumed:</strong> ${aiUsage.tokens_consumed ? aiUsage.tokens_consumed.toLocaleString() : 'Unknown'}</small><br>
+                    <small><strong>Cost:</strong> ${aiUsage.cost ? '$' + aiUsage.cost.toFixed(4) : 'Unknown'}</small><br>
+                    <small><strong>Processing Time:</strong> ${aiUsage.processing_time ? aiUsage.processing_time.toFixed(1) + 's' : 'Unknown'}</small>
+                </div>
+            </div>
+            ${aiUsage.fallback_used ? '<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Fallback mode was used (no AI processing)</small>' : ''}
+        </div>
+        `;
     }
 
     document.getElementById('extraction-details').innerHTML = resultsHtml;
