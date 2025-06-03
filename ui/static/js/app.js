@@ -2640,6 +2640,7 @@ function loadSettings() {
                 // AI Configuration
                 document.getElementById('anthropic-api-key').value = settings.ANTHROPIC_API_KEY || '';
                 document.getElementById('openai-api-key').value = settings.OPENAI_API_KEY || '';
+                document.getElementById('openrouter-api-key').value = settings.OPENROUTER_API_KEY || '';
                 document.getElementById('local-llm-url').value = settings.LOCAL_LLM_URL || 'http://localhost:11434';
 
                 // Database Configuration
@@ -2671,6 +2672,7 @@ function saveSettings() {
         // AI Configuration
         ANTHROPIC_API_KEY: document.getElementById('anthropic-api-key').value,
         OPENAI_API_KEY: document.getElementById('openai-api-key').value,
+        OPENROUTER_API_KEY: document.getElementById('openrouter-api-key').value,
         LOCAL_LLM_URL: document.getElementById('local-llm-url').value,
 
         // Database Configuration
