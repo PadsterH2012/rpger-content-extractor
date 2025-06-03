@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+# Accept build arguments from CI/CD
+ARG VERSION_STRING=unknown
+ARG BUILD_DATE=unknown
+ARG GIT_COMMIT=unknown
+
 # Set working directory
 WORKDIR /app
 
@@ -18,6 +23,22 @@ COPY . .
 
 # Create necessary directories
 RUN mkdir -p uploads extracted logs
+
+# Set build information as environment variables
+ENV BUILD_VERSION=$VERSION_STRING
+ENV BUILD_DATE=$BUILD_DATE  
+ENV GIT_COMMIT=$GIT_COMMIT
+ENV ENVIRONMENT=production
+
+# Create version file for runtime access
+RUN echo "$VERSION_STRING" > /app/VERSION
+
+# Add metadata labels for Docker image inspection
+LABEL version="$VERSION_STRING"
+LABEL build.date="$BUILD_DATE"
+LABEL git.commit="$GIT_COMMIT"
+LABEL maintainer="PadsterH2012"
+LABEL description="RPGer Content Extractor"
 
 # Expose port
 EXPOSE 5000
