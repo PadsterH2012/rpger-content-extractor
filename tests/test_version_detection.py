@@ -120,9 +120,11 @@ class TestVersionDetection:
         """Test behavior with partial environment variables"""
         with patch.dict(os.environ, {
             'BUILD_VERSION': '1.0.44',
-            'ENVIRONMENT': 'production'
-            # Missing BUILD_DATE and GIT_COMMIT
-        }):
+            'ENVIRONMENT': 'production',
+            # Explicitly clear BUILD_DATE and GIT_COMMIT to test partial scenario
+            'BUILD_DATE': '',
+            'GIT_COMMIT': ''
+        }, clear=False):
             # Import version module fresh to test detection
             import importlib
             import version
