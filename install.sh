@@ -248,13 +248,28 @@ ENVEOF
         "fullstack")
             sed -i 's|MONGODB_URL=|MONGODB_URL=mongodb://mongodb:27017|' .env
             sed -i 's|CHROMADB_URL=|CHROMADB_URL=http://chromadb:8000|' .env
+            print_success "Configured for Full Stack mode with included databases"
             ;;
         "production"|"development")
-            configure_external_databases
+            if [ ! -t 0 ]; then
+                print_warning "Running in pipe mode - database URLs not configured"
+                print_warning "Edit .env file to add your database URLs:"
+                print_warning "  MONGODB_URL=mongodb://your-host:27017"
+                print_warning "  CHROMADB_URL=http://your-host:8000"
+            else
+                configure_external_databases
+            fi
             ;;
     esac
 
-    configure_api_keys
+    # Only try to configure API keys in interactive mode
+    if [ -t 0 ]; then
+        configure_api_keys
+    else
+        print_warning "Running in pipe mode - API keys not configured"
+        print_warning "Edit .env file to add your API keys if needed"
+    fi
+
     print_success "Environment configured"
 }
 
@@ -395,6 +410,13 @@ show_completion_message() {
     echo -e "${CYAN}📁 Installation Directory:${NC} $(pwd)"
     echo -e "${CYAN}🐳 Docker Image:${NC} $DOCKER_IMAGE"
     echo -e "${CYAN}⚙️  Deployment Mode:${NC} $DEPLOYMENT_MODE"
+
+    # Show installation mode
+    if [ ! -t 0 ]; then
+        echo -e "${CYAN}🔧 Installation Mode:${NC} Auto (pipe mode)"
+    else
+        echo -e "${CYAN}🔧 Installation Mode:${NC} Interactive"
+    fi
     echo
 
     case $DEPLOYMENT_MODE in
@@ -428,15 +450,36 @@ show_completion_message() {
     fi
 
     echo
-    echo -e "${YELLOW}📝 Configuration:${NC}"
-    echo "   Edit .env file to modify settings"
-    echo "   Backup created: .env.backup (if existed)"
+    echo -e "${YELLOW}📝 Configuration Status:${NC}"
+    if [ -f ".env" ]; then
+        echo "   ✅ .env file created"
+        if [ "$DEPLOYMENT_MODE" = "fullstack" ]; then
+            echo "   ✅ Database URLs configured (internal containers)"
+        else
+            echo "   ⚠️  Database URLs need configuration"
+            echo "   📝 Edit .env file to add MongoDB and ChromaDB URLs"
+        fi
+        if [ ! -t 0 ]; then
+            echo "   ⚠️  API keys not configured (pipe mode)"
+            echo "   📝 Edit .env file to add API keys if needed"
+        fi
+    else
+        echo "   ❌ .env file missing - this is a bug!"
+    fi
+
+    if [ -f ".env.backup" ]; then
+        echo "   📋 Backup created: .env.backup"
+    fi
     echo
     echo -e "${GREEN}🎮 Happy RPG content extracting! 🎮${NC}"
 }
 
 # Main execution
 main() {
+    # Set error handling
+    set -e
+    trap 'print_error "Installation failed at line $LINENO. Please check the error above."' ERR
+
     print_header
     check_dependencies
     create_install_directory
@@ -445,6 +488,19 @@ main() {
     configure_environment
     create_startup_scripts
     show_completion_message
+
+    # Verify critical files exist
+    if [ ! -f ".env" ]; then
+        print_error "Critical error: .env file was not created!"
+        exit 1
+    fi
+
+    if [ ! -f "start-production.sh" ]; then
+        print_error "Critical error: startup scripts were not created!"
+        exit 1
+    fi
+
+    print_success "All installation steps completed successfully!"
 }
 
 # Run main function
