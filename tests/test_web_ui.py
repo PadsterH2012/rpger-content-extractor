@@ -40,9 +40,10 @@ def create_mock_pdf_document(num_pages=1, has_isbn=False):
         has_isbn: Whether to include ISBN in metadata
 
     Returns:
-        Mock PyMuPDF document object
+        MagicMock PyMuPDF document object with proper special methods
     """
-    mock_doc = Mock()
+    # Use MagicMock to properly support special methods like __len__ and __getitem__
+    mock_doc = MagicMock()
     mock_doc.close = Mock()
 
     # Configure metadata
@@ -51,16 +52,17 @@ def create_mock_pdf_document(num_pages=1, has_isbn=False):
     else:
         mock_doc.metadata = {}
 
+    # Create mock pages
+    mock_pages = []
+    for i in range(num_pages):
+        mock_page = MagicMock()
+        mock_page.get_text = Mock(return_value=f"Page {i+1} content")
+        mock_pages.append(mock_page)
+
     # Configure __len__ to support len(doc)
     mock_doc.__len__ = Mock(return_value=num_pages)
 
     # Configure __getitem__ to support doc[page_num]
-    mock_pages = []
-    for i in range(num_pages):
-        mock_page = Mock()
-        mock_page.get_text = Mock(return_value=f"Page {i+1} content")
-        mock_pages.append(mock_page)
-
     mock_doc.__getitem__ = Mock(side_effect=lambda idx: mock_pages[idx])
 
     return mock_doc
