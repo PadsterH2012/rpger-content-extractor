@@ -1,3 +1,11 @@
+---
+title: Installation Guide - RPGer Content Extractor
+description: Comprehensive installation guide for all deployment modes
+tags: [installation, setup, deployment, docker, configuration]
+last_updated: 2025-10-18
+author: HL-Auggie Analysis System
+---
+
 # Installation Guide
 
 This guide covers all installation methods for RPGer Content Extractor, from quick one-line setup to advanced configurations.
@@ -267,4 +275,4 @@ docker compose exec app bash
 
 ---
 
-**Next Steps**: [Quick Start Guide](Quick-Start.md) | [Configuration Guide](Configuration.md)
+**Next Steps**: [Quick Start Guide](Quick-Start.md) | [Configuration Guide](reference/configuration-reference.md)

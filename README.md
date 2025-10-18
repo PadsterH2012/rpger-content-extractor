@@ -1,14 +1,14 @@
-# 🎮 RPGer Content Extractor
+# RPGer Content Extractor
 
 **AI-Powered Multi-Game RPG PDF Content Extraction & Management System**
 
 A dockerized solution for extracting, categorizing, and managing RPG content from PDF sources with dual deployment options.
 
-## 🚀 Quick Start
+## Quick Start
 
-### ⚡ Quick Install
+### Quick Install
 
-#### 🚀 **One-Line Install (Auto-mode)**
+#### One-Line Install (Auto-mode)
 ```bash
 # Automatic installation with Production defaults
 curl -sSL https://raw.githubusercontent.com/PadsterH2012/rpger-content-extractor/main/install.sh | bash
@@ -20,7 +20,7 @@ cd rpger-extractor
 ./start-production.sh
 ```
 
-#### 🎯 **Interactive Install (Full Setup)**
+#### Interactive Install (Full Setup)
 ```bash
 # Download and run for interactive configuration
 wget https://raw.githubusercontent.com/PadsterH2012/rpger-content-extractor/main/install.sh
@@ -31,9 +31,9 @@ chmod +x install.sh
 cd rpger-extractor
 
 # Start your chosen deployment mode
-./start-production.sh    # 🚀 Production (pre-built images)
-./start-development.sh   # 🛠️ Development (build from source)
-./start-fullstack.sh     # 🗄️ Full Stack (includes databases)
+./start-production.sh    # Production (pre-built images)
+./start-development.sh   # Development (build from source)
+./start-fullstack.sh     # Full Stack (includes databases)
 
 # Stop all services
 ./stop.sh
@@ -44,15 +44,15 @@ docker compose logs -f app
 ```
 
 **Installer Features:**
-- 🎯 **Interactive menu** - Choose Production/Development/Full Stack
-- 🔧 **Auto-configuration** - Database URLs and API keys setup
-- 📁 **Clean installation** - Creates `/rpger-extractor/` directory
-- 🛡️ **Safe .env handling** - Backs up existing, creates new if missing
-- 🚀 **Ready-to-run scripts** - Start/stop scripts for each mode
-- ✅ **Dependency checking** - Verifies Docker & Docker Compose
-- 🎨 **Beautiful UI** - Colored output with progress indicators
+- **Interactive menu** - Choose Production/Development/Full Stack
+- **Auto-configuration** - Database URLs and API keys setup
+- **Clean installation** - Creates `/rpger-extractor/` directory
+- **Safe .env handling** - Backs up existing, creates new if missing
+- **Ready-to-run scripts** - Start/stop scripts for each mode
+- **Dependency checking** - Verifies Docker & Docker Compose
+- **Beautiful UI** - Colored output with progress indicators
 
-### 🎯 Manual Production Setup
+### Manual Production Setup
 Use pre-built Docker images - **Latest: v1.0.44**
 
 ```bash
@@ -66,7 +66,7 @@ docker-compose up -d
 open http://localhost:5000
 ```
 
-### 🛠️ Development
+### Development
 Full source code with live reloading
 
 ```bash
@@ -81,7 +81,7 @@ docker-compose -f docker-compose.dev.yml up -d
 open http://localhost:5000
 ```
 
-### 🗄️ Full Stack (with Databases)
+### Full Stack (with Databases)
 Complete setup including MongoDB and ChromaDB
 
 ```bash
@@ -96,30 +96,30 @@ docker-compose -f docker-compose.yml -f docker-compose.containers.yml up -d
 open http://localhost:5000
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Three Deployment Options
 
-#### 🚀 Production (Pre-built Images)
+#### Production (Pre-built Images)
 - **App Container**: Uses CI/CD built images (v1.0.44)
 - **External Databases**: Connect to your MongoDB/ChromaDB
 - **Resource Usage**: ~200MB RAM, 500MB storage
 - **Best For**: Production deployments, quick testing
 
-#### 🛠️ Development (Build from Source)
+#### Development (Build from Source)
 - **App Container**: Built locally with live code reloading
 - **External Databases**: Connect to your MongoDB/ChromaDB
 - **Resource Usage**: ~300MB RAM, 1GB storage
 - **Best For**: Local development, code changes
 
-#### 🗄️ Full Stack (Complete Environment)
+#### Full Stack (Complete Environment)
 - **App Container**: Flask web UI + processing engine
 - **MongoDB Container**: Document database for extracted content
 - **ChromaDB Container**: Vector database for semantic search
 - **Resource Usage**: ~1.5GB RAM, 2GB storage
 - **Best For**: Self-contained testing, demos
 
-## 🎯 Features
+## Features
 
 - **Multi-Game Support**: D&D, Pathfinder, Call of Cthulhu, and more
 - **AI-Powered Detection**: Automatic game type and edition detection
@@ -129,23 +129,23 @@ open http://localhost:5000
 - **Docker Ready**: Both container stack and external DB modes
 - **Health Monitoring**: Built-in health checks and monitoring
 
-## 📋 Requirements
+## Requirements
 
-### 🚀 Production Mode
+### Production Mode
 - Docker & Docker Compose (standalone or plugin)
 - 500MB+ RAM available
 - 1GB+ disk space
 - External MongoDB instance
 - External ChromaDB instance
 
-### 🛠️ Development Mode
+### Development Mode
 - Docker & Docker Compose (standalone or plugin)
 - 1GB+ RAM available
 - 2GB+ disk space
 - External MongoDB instance
 - External ChromaDB instance
 
-### 🗄️ Full Stack Mode
+### Full Stack Mode
 - Docker & Docker Compose (standalone or plugin)
 - 2GB+ RAM available
 - 4GB+ disk space
@@ -157,27 +157,27 @@ open http://localhost:5000
 - OpenRouter API key
 - Or local LLM setup
 
-## � Installation Script Features
+## Installation Script Features
 
 The one-line installer (`install.sh`) provides a comprehensive setup experience:
 
-### 🎯 **Interactive Setup**
+### Interactive Setup
 - **Deployment Mode Selection**: Choose between Production, Development, or Full Stack
 - **Database Configuration**: Guided setup for MongoDB and ChromaDB URLs
 - **API Key Management**: Secure input for AI provider keys (Anthropic, OpenAI, OpenRouter)
 - **Smart .env Handling**: Preserves existing configuration, creates backup before changes
 
-### 🚀 **Generated Scripts**
+### Generated Scripts
 After installation, you'll have these ready-to-use scripts:
 
 | Script | Purpose | Command |
 |--------|---------|---------|
-| `start-production.sh` | 🚀 Production mode with pre-built images | `./start-production.sh` |
-| `start-development.sh` | 🛠️ Development mode with source building | `./start-development.sh` |
-| `start-fullstack.sh` | 🗄️ Full stack with included databases | `./start-fullstack.sh` |
-| `stop.sh` | 🛑 Universal stop script for all modes | `./stop.sh` |
+| `start-production.sh` | Production mode with pre-built images | `./start-production.sh` |
+| `start-development.sh` | Development mode with source building | `./start-development.sh` |
+| `start-fullstack.sh` | Full stack with included databases | `./start-fullstack.sh` |
+| `stop.sh` | Universal stop script for all modes | `./stop.sh` |
 
-### 📁 **Directory Structure**
+### Directory Structure
 ```
 rpger-extractor/
 ├── docker-compose.yml           # Production configuration
@@ -191,7 +191,7 @@ rpger-extractor/
 └── stop.sh                      # Universal stop script
 ```
 
-### 🛡️ **Safety Features**
+### Safety Features
 - **Dependency Checking**: Verifies Docker and Docker Compose installation (both standalone and plugin versions)
 - **Non-destructive**: Won't overwrite existing `.env` files without permission
 - **Backup Creation**: Automatically backs up existing configuration
@@ -201,7 +201,7 @@ rpger-extractor/
 
 ---
 
-## �🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -228,9 +228,9 @@ rpger.source_material.{game_type}.{edition}.{book_type}.{collection_name}
 - Vector embeddings for semantic search
 - Metadata filtering capabilities
 
-## 🐳 Docker Deployment Options
+## Docker Deployment Options
 
-### 🚀 Production (Recommended)
+### Production (Recommended)
 Uses pre-built images from CI/CD pipeline - **Latest: v1.0.44**
 
 ```bash
@@ -256,13 +256,13 @@ docker-compose pull && docker-compose up -d
 ```
 
 **Image Details:**
-- 📦 **Latest**: `padster2012/rpger-content-extractor:latest`
-- 🏷️ **Current Version**: `padster2012/rpger-content-extractor:1.0.44`
-- 🔄 **Auto-updated**: Every successful CI/CD build
-- ✅ **Build Status**: All tests passing (Build #44)
-- 🐳 **Registry**: [Docker Hub](https://hub.docker.com/r/padster2012/rpger-content-extractor)
+- **Latest**: `padster2012/rpger-content-extractor:latest`
+- **Current Version**: `padster2012/rpger-content-extractor:1.0.44`
+- **Auto-updated**: Every successful CI/CD build
+- **Build Status**: All tests passing (Build #44)
+- **Registry**: [Docker Hub](https://hub.docker.com/r/padster2012/rpger-content-extractor)
 
-### 🛠️ Development
+### Development
 Build from source with live code reloading
 
 ```bash
@@ -283,7 +283,7 @@ docker-compose -f docker-compose.dev.yml up -d --build
 # or manually: docker-compose -f docker-compose.dev.yml down
 ```
 
-### 🗄️ Full Stack (with Databases)
+### Full Stack (with Databases)
 Includes MongoDB and ChromaDB containers
 
 ```bash
@@ -301,7 +301,7 @@ docker-compose ps
 # or manually: docker-compose -f docker-compose.yml -f docker-compose.containers.yml down -v
 ```
 
-## 🔍 Health Checks
+## Health Checks
 
 ### Application Health
 ```bash
@@ -319,7 +319,7 @@ docker-compose logs chromadb
 docker-compose logs app
 ```
 
-## 📊 Monitoring
+## Monitoring
 
 ### Built-in Monitoring
 - Application health endpoint: `/health`
@@ -332,7 +332,7 @@ docker-compose logs app
 - Container restart policies
 - Log aggregation ready
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run test suite
@@ -346,12 +346,12 @@ pytest tests/test_web_ui.py
 pytest --cov=Modules tests/
 ```
 
-## 📚 Documentation
+## Documentation
 
 ### Quick References
 - **Docker Hub**: [padster2012/rpger-content-extractor](https://hub.docker.com/r/padster2012/rpger-content-extractor)
 - **GitHub Repository**: [PadsterH2012/rpger-content-extractor](https://github.com/PadsterH2012/rpger-content-extractor)
-- **CI/CD Status**: Jenkins Build #44 ✅
+- **CI/CD Status**: Jenkins Build #44 - All tests passing
 - **Latest Version**: v1.0.44
 
 ### API Endpoints
@@ -360,7 +360,7 @@ pytest --cov=Modules tests/
 - **Extract Content**: `POST /extract`
 - **View Results**: `GET /results`
 
-## 🔧 Development
+## Development
 
 ### Local Development Setup
 ```bash
@@ -389,11 +389,11 @@ docker-compose -f docker-compose.dev.yml exec app pytest tests/
 4. Ensure all tests pass
 5. Submit pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
 ### Getting Help
 - **GitHub Issues**: [Report bugs or request features](https://github.com/PadsterH2012/rpger-content-extractor/issues)
@@ -408,4 +408,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for the RPG community**
+**Built for the RPG community**

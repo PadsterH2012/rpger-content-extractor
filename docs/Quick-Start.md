@@ -1,8 +1,16 @@
+---
+title: Quick Start Guide - RPGer Content Extractor
+description: Get RPGer Content Extractor up and running in under 5 minutes
+tags: [quick-start, setup, installation, getting-started]
+last_updated: 2025-10-18
+author: HL-Auggie Analysis System
+---
+
 # Quick Start Guide
 
 Get RPGer Content Extractor up and running in under 5 minutes!
 
-## 🎯 5-Minute Setup
+## 5-Minute Setup
 
 ### Step 1: Install (30 seconds)
 
@@ -14,17 +22,17 @@ cd rpger-extractor
 
 ### Step 2: Choose Your Mode (1 minute)
 
-#### 🚀 Quick Demo (Full Stack)
+#### Quick Demo (Full Stack)
 Perfect for trying out the application:
 
 ```bash
 ./start-fullstack.sh
 ```
-- ✅ Everything included (databases, app)
-- ✅ No external setup required
-- ✅ Ready in ~2 minutes
+- Everything included (databases, app)
+- No external setup required
+- Ready in ~2 minutes
 
-#### 🏭 Production Setup
+#### Production Setup
 For real usage with your own databases:
 
 ```bash
@@ -46,14 +54,14 @@ Open your browser and navigate to:
 
 You should see the RPGer Content Extractor dashboard!
 
-## 🎮 First Steps
+## First Steps
 
 ### 1. Check System Status
 
 Navigate to the **System Status** section to verify:
-- ✅ AI Provider connection
-- ✅ Database connections (MongoDB & ChromaDB)
-- ✅ Available models
+- AI Provider connection
+- Database connections (MongoDB & ChromaDB)
+- Available models
 
 ### 2. Configure AI Provider (Optional)
 
@@ -84,7 +92,7 @@ Once processing completes:
 - **Export** content in various formats
 - **Organize** into collections
 
-## 🔧 Configuration Essentials
+## Configuration Essentials
 
 ### Database URLs (Production Mode)
 
@@ -123,7 +131,7 @@ WORKERS=1               # CPU cores to use
 LOG_LEVEL=INFO         # DEBUG for troubleshooting
 ```
 
-## 📊 Understanding the Interface
+## Understanding the Interface
 
 ### Dashboard Overview
 
@@ -155,7 +163,7 @@ RPGer Content Extractor recognizes:
 - **Spells**: Magic systems, spell descriptions
 - **Monsters**: Creatures, stats, abilities
 
-## 🎯 Common Workflows
+## Common Workflows
 
 ### Workflow 1: Processing a Rulebook
 
@@ -234,23 +242,23 @@ docker compose exec app python -c "import pymongo; print(pymongo.MongoClient('mo
 curl http://localhost:8000/api/v1/heartbeat
 ```
 
-## 🚀 Next Steps
+## Next Steps
 
 ### Learn More
-- **[Web Interface Guide](Web-Interface-Guide.md)** - Detailed UI walkthrough
-- **[PDF Processing](PDF-Processing.md)** - Advanced processing options
-- **[AI Provider Setup](AI-Provider-Setup.md)** - Detailed AI configuration
+- **[Web Interface Guide](user-guides/web-interface-guide.md)** - Detailed UI walkthrough
+- **[PDF Processing Guide](user-guides/pdf-processing-guide.md)** - Advanced processing options
+- **[Environment Configuration](deployment/environment-configuration.md)** - Detailed AI configuration
 
 ### Advanced Usage
-- **[API Documentation](API-Documentation.md)** - REST API reference
-- **[Content Management](Content-Management.md)** - Organization strategies
-- **[Development Setup](Development-Setup.md)** - Contributing to the project
+- **[API Documentation](api/api-reference.md)** - REST API reference
+- **[Content Management Guide](user-guides/content-management-guide.md)** - Organization strategies
+- **[Development Setup](development/development-setup.md)** - Contributing to the project
 
 ### Get Help
-- **[Common Issues](Common-Issues.md)** - Troubleshooting guide
-- **[FAQ](FAQ.md)** - Frequently asked questions
+- **[Troubleshooting Guide](operations/troubleshooting-guide.md)** - Troubleshooting guide
+- **[Documentation Index](index.md)** - Complete documentation
 - **[GitHub Issues](https://github.com/PadsterH2012/rpger-content-extractor/issues)** - Report problems
 
 ---
 
-**Congratulations!** 🎉 You now have RPGer Content Extractor running and ready to process your RPG content. Start by uploading a PDF and exploring the extracted content!
+**Congratulations!** You now have RPGer Content Extractor running and ready to process your RPG content. Start by uploading a PDF and exploring the extracted content!

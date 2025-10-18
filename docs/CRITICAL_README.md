@@ -1,6 +1,14 @@
-# 🚨 CRITICAL README - AI-Powered Extraction v3 System
+---
+title: Critical README - AI-Powered Extraction v3 System
+description: Essential setup and configuration guide for the RPG content extraction system
+tags: [critical-readme, setup, configuration, quick-start]
+last_updated: 2025-10-18
+author: HL-Auggie Analysis System
+---
 
-## ⚡ Quick Start (5 Minutes)
+# CRITICAL README - AI-Powered Extraction v3 System
+
+## Quick Start (5 Minutes)
 
 ### 1. Install Dependencies
 ```bash
@@ -26,7 +34,7 @@ python3 ui/start_ui.py
 # Open http://localhost:5000
 ```
 
-## 🎯 What This System Does
+## What This System Does
 
 ### Core Functionality
 - **AI-Powered Book Detection**: Automatically identifies RPG books (D&D, Pathfinder, etc.)
@@ -47,7 +55,7 @@ python3 ui/start_ui.py
 - World of Darkness
 - Generic RPG content
 
-## 🔧 System Requirements
+## System Requirements
 
 ### Minimum Requirements
 - Python 3.8+
@@ -67,7 +75,7 @@ python3 ui/start_ui.py
 - **MongoDB**: For traditional queries and structured data
 - Both can run locally or on remote servers
 
-## 🚀 Production-Ready Features
+## Production-Ready Features
 
 ### AI Integration
 - **Claude AI**: 95% accuracy for book detection
@@ -87,7 +95,7 @@ python3 ui/start_ui.py
 - **Validation**: Input validation and sanitization
 - **Logging**: Detailed logging for debugging
 
-## 📊 Proven Results
+## Proven Results
 
 ### Tested Performance
 - **Book Detection**: 95%+ accuracy across 100+ test books
@@ -115,7 +123,7 @@ python3 ui/start_ui.py
 - **Data Retention**: Configurable data retention policies
 - **Audit Logging**: Track all processing activities
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -194,7 +202,7 @@ python3 -c "from Modules.ai_game_detector import AIGameDetector; print('AI:', AI
 - Issue Tracker: Report bugs and feature requests
 - Discussions: Share usage patterns and tips
 
-## ⚠️ Important Notes
+## Important Notes
 
 ### Before Production Use
 1. **Test thoroughly** with your specific PDF types
@@ -214,18 +222,18 @@ python3 -c "from Modules.ai_game_detector import AIGameDetector; print('AI:', AI
 - Regular backups of extracted content
 - Monitor storage usage
 
-## 🎉 Success Indicators
+## Success Indicators
 
 You'll know the system is working correctly when:
-- ✅ PDF uploads complete without errors
-- ✅ AI correctly identifies book types (95%+ accuracy)
-- ✅ Content is properly categorized and stored
-- ✅ Search functionality returns relevant results
-- ✅ Web UI shows real-time progress updates
-- ✅ Database connections are stable
-- ✅ API costs are within expected ranges
+- PDF uploads complete without errors
+- AI correctly identifies book types (95%+ accuracy)
+- Content is properly categorized and stored
+- Search functionality returns relevant results
+- Web UI shows real-time progress updates
+- Database connections are stable
+- API costs are within expected ranges
 
-## 🚀 Next Steps
+## Next Steps
 
 After successful setup:
 1. **Process test PDFs** to validate functionality
