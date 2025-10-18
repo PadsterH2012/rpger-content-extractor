@@ -26,6 +26,46 @@ sys.path.append(str(Path(__file__).parent.parent / "ui"))
 from ui.app import app
 
 
+def create_mock_pdf_document(num_pages=1, has_isbn=False):
+    """
+    Create a properly configured mock PyMuPDF document.
+
+    This helper function creates a mock document that properly supports:
+    - len(doc) via __len__
+    - doc[page_num] via __getitem__
+    - page.get_text() for text extraction
+
+    Args:
+        num_pages: Number of pages in the mock document
+        has_isbn: Whether to include ISBN in metadata
+
+    Returns:
+        Mock PyMuPDF document object
+    """
+    mock_doc = Mock()
+    mock_doc.close = Mock()
+
+    # Configure metadata
+    if has_isbn:
+        mock_doc.metadata = {'subject': 'ISBN-13: 9780786965601'}
+    else:
+        mock_doc.metadata = {}
+
+    # Configure __len__ to support len(doc)
+    mock_doc.__len__ = Mock(return_value=num_pages)
+
+    # Configure __getitem__ to support doc[page_num]
+    mock_pages = []
+    for i in range(num_pages):
+        mock_page = Mock()
+        mock_page.get_text = Mock(return_value=f"Page {i+1} content")
+        mock_pages.append(mock_page)
+
+    mock_doc.__getitem__ = Mock(side_effect=lambda idx: mock_pages[idx])
+
+    return mock_doc
+
+
 @pytest.mark.priority2
 @pytest.mark.web
 @pytest.mark.integration
@@ -217,10 +257,7 @@ class TestAnalyzeEndpoint:
 
                 # Mock fitz (PyMuPDF) for ISBN extraction
                 with patch('fitz.open') as mock_fitz:
-                    mock_doc = Mock()
-                    mock_doc.close = Mock()
-                    mock_doc.__len__ = Mock(return_value=1)  # PDF has 1 page
-                    mock_doc.metadata = {}  # Mock metadata as empty dict
+                    mock_doc = create_mock_pdf_document(num_pages=1, has_isbn=False)
                     mock_fitz.return_value = mock_doc
 
                     # Mock PDF processor for ISBN extraction
@@ -352,9 +389,7 @@ class TestAnalyzeEndpoint:
 
                     # Mock fitz and PDF processor for ISBN extraction
                     with patch('fitz.open') as mock_fitz:
-                        mock_doc = Mock()
-                        mock_doc.close = Mock()
-                        mock_doc.metadata = {}  # Mock metadata as empty dict
+                        mock_doc = create_mock_pdf_document(num_pages=1, has_isbn=False)
                         mock_fitz.return_value = mock_doc
 
                         with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
@@ -433,21 +468,29 @@ class TestExtractEndpoint:
                 mock_processor.extract_pdf.return_value = {
                     'metadata': {'game_type': 'D&D'},
                     'sections': [{'title': 'Test', 'content': 'Test content'}],
-                    'extraction_summary': {'total_pages': 1, 'sections_extracted': 1}
+                    'extraction_summary': {
+                        'total_pages': 1,
+                        'sections_extracted': 1
+                    }
                 }
 
-                data = {
-                    'session_id': 'test_session',
-                    'enable_text_enhancement': True,
-                    'aggressive_cleanup': False
-                }
+                # Mock fitz for any ISBN extraction that might occur
+                with patch('fitz.open') as mock_fitz:
+                    mock_doc = create_mock_pdf_document(num_pages=1)
+                    mock_fitz.return_value = mock_doc
 
-                response = client.post('/extract',
-                                     data=json.dumps(data),
-                                     content_type='application/json')
+                    data = {
+                        'session_id': 'test_session',
+                        'enable_text_enhancement': True,
+                        'aggressive_cleanup': False
+                    }
 
-                # Should handle extraction request
-                assert response.status_code in [200, 500]  # May fail due to mocking complexity
+                    response = client.post('/extract',
+                                         data=json.dumps(data),
+                                         content_type='application/json')
+
+                    # Should handle extraction request
+                    assert response.status_code in [200, 500]
 
 
 class TestProgressTracking:
