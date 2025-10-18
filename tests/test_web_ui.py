@@ -449,23 +449,29 @@ class TestExtractEndpoint:
 
     def test_extract_with_text_enhancement(self, client):
         """Test extraction with text enhancement options"""
-        # First, we need to simulate an analysis session
-        with patch('ui.app.analysis_results') as mock_analysis:
-            mock_analysis.__contains__ = Mock(return_value=True)
-            mock_analysis.__getitem__ = Mock(return_value={
-                'filepath': '/tmp/test.pdf',
-                'game_metadata': {
-                    'game_type': 'D&D',
-                    'edition': '5th Edition',
-                    'confidence': 95.0
-                },
-                'ai_provider': 'mock',
-                'content_type': 'source_material'
-            })
+        # Import the actual analysis_results dict from app
+        from ui.app import analysis_results, extraction_results
 
+        # Set up a test session in analysis_results
+        test_session_id = 'test_session_extract'
+        analysis_results[test_session_id] = {
+            'filepath': '/tmp/test.pdf',
+            'game_metadata': {
+                'game_type': 'D&D',
+                'edition': '5th Edition',
+                'confidence': 95.0
+            },
+            'ai_provider': 'mock',
+            'content_type': 'source_material'
+        }
+
+        try:
             with patch('Modules.pdf_processor.MultiGamePDFProcessor') as mock_processor_class:
                 mock_processor = Mock()
                 mock_processor_class.return_value = mock_processor
+
+                # Mock the progress callback
+                mock_processor._character_progress_callback = Mock()
 
                 mock_processor.extract_pdf.return_value = {
                     'metadata': {'game_type': 'D&D'},
@@ -482,7 +488,7 @@ class TestExtractEndpoint:
                     mock_fitz.return_value = mock_doc
 
                     data = {
-                        'session_id': 'test_session',
+                        'session_id': test_session_id,
                         'enable_text_enhancement': True,
                         'aggressive_cleanup': False
                     }
@@ -491,8 +497,14 @@ class TestExtractEndpoint:
                                          data=json.dumps(data),
                                          content_type='application/json')
 
-                    # Should handle extraction request
+                    # Should handle extraction request (200 success or 500 error)
                     assert response.status_code in [200, 500]
+        finally:
+            # Clean up test data
+            if test_session_id in analysis_results:
+                del analysis_results[test_session_id]
+            if test_session_id in extraction_results:
+                del extraction_results[test_session_id]
 
 
 class TestProgressTracking:
