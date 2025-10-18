@@ -330,3 +330,31 @@ def sample_extraction_result():
             "processing_time": 45.2
         }
     }
+
+
+# ============================================================================
+# Flask App State Cleanup
+# ============================================================================
+
+@pytest.fixture(autouse=True)
+def clear_flask_app_state():
+    """
+    Automatically clear Flask app global state before each test.
+    This prevents test pollution from analysis_results and extraction_results dictionaries.
+    """
+    # Import here to avoid circular imports
+    try:
+        from ui.app import analysis_results, extraction_results
+
+        # Clear before test
+        analysis_results.clear()
+        extraction_results.clear()
+
+        yield
+
+        # Clear after test
+        analysis_results.clear()
+        extraction_results.clear()
+    except ImportError:
+        # If ui.app is not available, just yield without doing anything
+        yield

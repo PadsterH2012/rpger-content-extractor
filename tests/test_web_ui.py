@@ -23,7 +23,7 @@ from io import BytesIO
 import sys
 sys.path.append(str(Path(__file__).parent.parent / "ui"))
 
-from ui.app import app
+from ui.app import app, analysis_results, extraction_results
 
 
 def create_mock_pdf_document(num_pages=1, has_isbn=False):
@@ -449,9 +449,6 @@ class TestExtractEndpoint:
 
     def test_extract_with_text_enhancement(self, client):
         """Test extraction with text enhancement options"""
-        # Import the actual analysis_results dict from app
-        from ui.app import analysis_results, extraction_results
-
         # Set up a test session in analysis_results
         test_session_id = 'test_session_extract'
         analysis_results[test_session_id] = {
