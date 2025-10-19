@@ -380,6 +380,113 @@ def upload_file():
 
         return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
+@app.route('/api/processing/plan', methods=['GET'])
+def get_processing_plan():
+    """Get planned AI usage information for processing steps"""
+    try:
+        step = request.args.get('step', 'analysis')
+        file_id = request.args.get('file_id')
+        content_type = request.args.get('content_type', 'source_material')
+        
+        # Get current AI provider configuration
+        ai_provider = request.args.get('ai_provider', 'mock')
+        ai_model = request.args.get('ai_model')
+        
+        # Initialize response structure
+        response = {
+            'step': step,
+            'ai_usage': {
+                'provider': ai_provider,
+                'model': ai_model or 'default',
+                'estimated_tokens': 0,
+                'purpose': '',
+                'fallback_mode': ai_provider == 'mock',
+                'cost_estimate': 0.0
+            }
+        }
+        
+        # Configure based on step type
+        if step == 'analysis':
+            response['ai_usage']['purpose'] = 'Content type detection & metadata extraction'
+            response['ai_usage']['estimated_tokens'] = 2000
+            
+            if ai_provider == 'mock':
+                response['ai_usage']['model'] = 'Mock AI (No real processing)'
+                response['ai_usage']['purpose'] = 'Basic text extraction only'
+            elif ai_provider == 'claude':
+                response['ai_usage']['model'] = 'Claude 3.5 Sonnet'
+            elif ai_provider == 'openai':
+                response['ai_usage']['model'] = 'GPT-4'
+            elif ai_provider == 'openrouter':
+                if ai_model:
+                    # Try to find model details from openrouter models
+                    try:
+                        models = openrouter_models.get('models', [])
+                        model_info = next((m for m in models if m.get('id') == ai_model), None)
+                        if model_info:
+                            response['ai_usage']['model'] = model_info.get('name', ai_model)
+                        else:
+                            response['ai_usage']['model'] = ai_model
+                    except:
+                        response['ai_usage']['model'] = ai_model
+                else:
+                    response['ai_usage']['model'] = 'OpenRouter (Model not selected)'
+                    response['ai_usage']['fallback_mode'] = True
+                    response['ai_usage']['purpose'] = 'Please select a model first'
+            elif ai_provider == 'local':
+                response['ai_usage']['model'] = 'Local LLM'
+                
+        elif step == 'extraction':
+            response['ai_usage']['purpose'] = 'Content categorization & enhancement'
+            response['ai_usage']['estimated_tokens'] = 5000
+            
+            if ai_provider == 'mock':
+                response['ai_usage']['model'] = 'Mock AI (No enhancement)'
+                response['ai_usage']['purpose'] = 'Basic categorization only'
+            elif ai_provider == 'claude':
+                response['ai_usage']['model'] = 'Claude 3.5 Sonnet'
+            elif ai_provider == 'openai':
+                response['ai_usage']['model'] = 'GPT-4'
+            elif ai_provider == 'openrouter':
+                if ai_model:
+                    try:
+                        models = openrouter_models.get('models', [])
+                        model_info = next((m for m in models if m.get('id') == ai_model), None)
+                        if model_info:
+                            response['ai_usage']['model'] = model_info.get('name', ai_model)
+                        else:
+                            response['ai_usage']['model'] = ai_model
+                    except:
+                        response['ai_usage']['model'] = ai_model
+                else:
+                    response['ai_usage']['model'] = 'OpenRouter (Model not selected)'
+                    response['ai_usage']['fallback_mode'] = True
+                    response['ai_usage']['purpose'] = 'Please select a model first'
+            elif ai_provider == 'local':
+                response['ai_usage']['model'] = 'Local LLM'
+        
+        # Estimate cost for OpenRouter models
+        if ai_provider == 'openrouter' and ai_model and not response['ai_usage']['fallback_mode']:
+            try:
+                models = openrouter_models.get('models', [])
+                model_info = next((m for m in models if m.get('id') == ai_model), None)
+                if model_info and model_info.get('pricing'):
+                    pricing = model_info['pricing']
+                    prompt_cost = float(pricing.get('prompt', 0))
+                    completion_cost = float(pricing.get('completion', 0))
+                    tokens = response['ai_usage']['estimated_tokens']
+                    # Rough estimate using average of prompt and completion costs
+                    avg_cost_per_token = (prompt_cost + completion_cost) / 2
+                    response['ai_usage']['cost_estimate'] = tokens * avg_cost_per_token
+            except Exception as e:
+                logger.debug(f"Cost estimation failed: {e}")
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Processing plan error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/analyze', methods=['POST'])
 def analyze_pdf():
     """Analyze PDF content using AI with confidence testing"""
@@ -506,13 +613,54 @@ def analyze_pdf():
             # Rough estimate: 1 token per 4 characters
             estimated_tokens = len(extracted_content['combined_text']) // 4
 
+        # Get processing time if available (rough estimate)
+        processing_time = 0.0
+        start_time = getattr(detector, '_analysis_start_time', None)
+        if start_time and hasattr(start_time, 'total_seconds'):
+            try:
+                processing_time = (datetime.now() - start_time).total_seconds()
+            except (TypeError, AttributeError):
+                processing_time = 0.0
+        
+        # Get actual model name used
+        actual_model = ai_model
+        if ai_provider == 'claude':
+            actual_model = 'Claude 3.5 Sonnet'
+        elif ai_provider == 'openai':
+            actual_model = 'GPT-4'
+        elif ai_provider == 'openrouter' and ai_model:
+            try:
+                models = openrouter_models.get('models', [])
+                model_info = next((m for m in models if m.get('id') == ai_model), None)
+                if model_info:
+                    actual_model = model_info.get('name', ai_model)
+            except:
+                pass
+        elif ai_provider == 'mock':
+            actual_model = 'Mock AI (No real processing)'
+        elif ai_provider == 'local':
+            actual_model = 'Local LLM'
+        
+        # Calculate confidence based on game detection results
+        analysis_confidence = 0.85  # Default
+        if game_metadata.get('confidence'):
+            analysis_confidence = float(game_metadata['confidence'])
+        
         return jsonify({
             'success': True,
             'session_id': session_id,
             'analysis': game_metadata,
             'confidence': confidence_results,
             'tokens_used': estimated_tokens,
-            'provider_used': ai_provider
+            'provider_used': ai_provider,
+            'ai_usage': {
+                'model_used': actual_model,
+                'tokens_consumed': estimated_tokens,
+                'processing_time': processing_time,
+                'confidence': analysis_confidence,
+                'fallback_used': ai_provider == 'mock',
+                'provider': ai_provider
+            }
         })
 
     except Exception as e:
@@ -738,6 +886,40 @@ def extract_pdf():
                 'characters': character_data.get('characters', []),
                 'processing_stages': character_data.get('processing_stages', {})
             }
+
+        # Add AI usage summary
+        ai_provider = analysis['ai_provider']
+        ai_model = analysis.get('ai_model')
+        
+        # Get actual model name used
+        actual_model = ai_model
+        if ai_provider == 'claude':
+            actual_model = 'Claude 3.5 Sonnet'
+        elif ai_provider == 'openai':
+            actual_model = 'GPT-4'
+        elif ai_provider == 'openrouter' and ai_model:
+            try:
+                models = openrouter_models.get('models', [])
+                model_info = next((m for m in models if m.get('id') == ai_model), None)
+                if model_info:
+                    actual_model = model_info.get('name', ai_model)
+            except:
+                pass
+        elif ai_provider == 'mock':
+            actual_model = 'Mock AI (No real processing)'
+        elif ai_provider == 'local':
+            actual_model = 'Local LLM'
+        
+        response_data['ai_usage'] = {
+            'model_used': actual_model,
+            'tokens_consumed': token_summary['total_tokens'],
+            'processing_time': 0.0,  # Could be calculated if needed
+            'confidence': 0.85,  # Could be derived from results
+            'fallback_used': ai_provider == 'mock',
+            'provider': ai_provider,
+            'api_calls': token_summary['total_api_calls'],
+            'cost': token_summary['total_cost']
+        }
 
         return jsonify(response_data)
 

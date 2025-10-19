@@ -63,6 +63,21 @@
                         </h5>
                     </div>
                     <div class="card-body">
+                        <!-- AI Usage Information -->
+                        <div class="alert alert-info" id="analysis-ai-info" style="display: none;">
+                            <h6><i class="fas fa-robot"></i> Planned AI Usage</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small><strong>Provider:</strong> <span id="analysis-provider">-</span></small><br>
+                                    <small><strong>Model:</strong> <span id="analysis-model">-</span></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Purpose:</strong> <span id="analysis-purpose">-</span></small><br>
+                                    <small><strong>Est. Tokens:</strong> <span id="analysis-tokens">-</span></small>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="row g-3 align-items-end">
                             <div class="col-md-6">
                                 <label for="content-type" class="form-label fw-semibold">Content Type</label>
@@ -114,7 +129,20 @@
                     <div class="card-body">
                         <p class="text-muted">Extract and categorize content from the analyzed PDF.</p>
 
-
+                        <!-- AI Usage Information -->
+                        <div class="alert alert-info" id="extraction-ai-info" style="display: none;">
+                            <h6><i class="fas fa-robot"></i> Planned AI Usage</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small><strong>Provider:</strong> <span id="extraction-provider">-</span></small><br>
+                                    <small><strong>Model:</strong> <span id="extraction-model">-</span></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small><strong>Purpose:</strong> <span id="extraction-purpose">-</span></small><br>
+                                    <small><strong>Est. Tokens:</strong> <span id="extraction-tokens">-</span></small>
+                                </div>
+                            </div>
+                        </div>
 
                         <button class="btn btn-warning" id="extract-btn" onclick="extractContent()">
                             <i class="fas fa-play"></i> Extract Content
